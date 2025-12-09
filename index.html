@@ -280,6 +280,18 @@
 
     .carousel-container { width: 100%; height: 100%; overflow: hidden; position: relative; mask-image: linear-gradient(to bottom, black 60%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%); }
     .carousel-track { display: flex; height: 100%; transition: transform 0.3s ease-out; }
+    
+    /* PATCH 1 & 2: Mobile Swipe Fix */
+    .carousel-track {
+        pointer-events: auto !important;
+        touch-action: manipulation !important; /* Covers pan-x pan-y */
+        position: relative !important;
+        z-index: 9999 !important;
+    }
+    .carousel-track * {
+        pointer-events: none !important;
+    }
+
     .carousel-slide { min-width: 100%; height: 100%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
     .carousel-slide img { width: 100%; height: 100%; object-fit: cover; }
     .carousel-dots { position: absolute; bottom: 80px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; z-index: 50; }
@@ -498,7 +510,7 @@
             <div id="carousel-root" class="carousel-container"></div>
             <div id="carousel-dots" class="carousel-dots"></div>
             
-            <div style="position: absolute; bottom: 30px; left: 24px; right: 24px; z-index: 60; pointer-events: none;">
+            <div style="position: absolute; bottom: 30px; left: 24px; right: 24px; z-index: 60;">
                 <h1 id="detail-title">Title</h1>
                 <div class="status-row" id="detail-status">
                     <!-- Dynamic Status Here -->
@@ -1622,12 +1634,10 @@ function renderList(filter = 'All') {
         const nextBtn = { click: () => { if(index < images.length - 1) index++; updateImage(); } };
         const prevBtn = { click: () => { if(index > 0) index--; updateImage(); } };
 
-        // 1. TouchStart (Patched with passive: true)
+        // 1. TouchStart (Patched with passive: true and capture: true)
         imgBox.addEventListener("touchstart", e => {
-            isDragging = true; 
             startX = e.touches[0].clientX;
-            track.style.transition = 'none';
-        }, { passive: true });
+        }, { passive: true, capture: true });
 
         // 2. TouchMove (Preserved for UI sliding animation, added passive: true)
         imgBox.addEventListener('touchmove', e => {
@@ -1637,17 +1647,12 @@ function renderList(filter = 'All') {
             track.style.transform = `translateX(${prevTranslate + diff}px)`;
         }, { passive: true });
 
-        // 3. TouchEnd (Patched with passive: true and threshold logic)
+        // 3. TouchEnd (Patched with passive: true, capture: true and threshold logic)
         imgBox.addEventListener("touchend", e => {
-            isDragging = false;
             let endX = e.changedTouches[0].clientX;
-            
-            track.style.transition = 'transform 0.3s ease-out';
-            
             if (endX < startX - 40) nextBtn.click();
-            else if (endX > startX + 40) prevBtn.click();
-            else updateImage(); // Snap back if swipe wasn't strong enough
-        }, { passive: true });
+            if (endX > startX + 40) prevBtn.click();
+        }, { passive: true, capture: true });
 
         // Initialize state
         setTimeout(updateImage, 50);
