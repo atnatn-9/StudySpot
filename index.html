@@ -391,6 +391,38 @@
             border: none;
         }
     }
+
+    /* CAROUSEL ARROWS */
+    .arrow-btn {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        backdrop-filter: blur(10px);
+        background: rgba(255, 255, 255, 0.25);
+        border: 1px solid rgba(255,255,255,0.35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        color: white;
+        cursor: pointer;
+        z-index: 9999;
+        transition: transform 0.2s, background 0.2s;
+    }
+    @media (hover: hover) {
+        .arrow-btn:hover {
+            transform: translateY(-50%) scale(1.1);
+            background: rgba(255, 255, 255, 0.35);
+        }
+    }
+    .arrow-btn:active {
+        transform: translateY(-50%) scale(0.95);
+    }
+    .arrow-left  { left: 10px; }
+    .arrow-right { right: 10px; }
 </style>
 </head>
 <body>
@@ -1112,7 +1144,7 @@ aiCrowdScore: 15,
     hotline: "0334626989",
     note: "Super spacious; great for deadlines or group discussions.",
     isFavorite: false,
-    lat: 10.782997412878819, lng: 106.68945385337301, 
+    lat: 10.782997412878819, lng: 106.68985385337301, 
 
     aiCrowdScore: 62,
     finalCrowdScore: 57,
@@ -1597,16 +1629,19 @@ function renderList(filter = 'All') {
         const root = document.getElementById('carousel-root');
         const dotsContainer = document.getElementById('carousel-dots');
         
-        // Render HTML - USES ALL IMAGES
-        root.innerHTML = `<div class="carousel-track" id="track">
-            ${images.map(src => `<div class="carousel-slide"><img src="${src}" onclick="openLightbox('${src}')"></div>`).join('')}
-        </div>`;
-        
-        // Render Dots - USES ALL IMAGES
+        // Render HTML with Arrow Buttons Added
+        root.innerHTML = `
+            <div class="carousel-track" id="track">
+                ${images.map(src => `<div class="carousel-slide"><img src="${src}" onclick="openLightbox('${src}')"></div>`).join('')}
+            </div>
+            <div class="arrow-btn arrow-left" id="carousel-prev"><i class="ph-bold ph-caret-left"></i></div>
+            <div class="arrow-btn arrow-right" id="carousel-next"><i class="ph-bold ph-caret-right"></i></div>
+        `;
         dotsContainer.innerHTML = images.map((_, i) => `<div class="dot ${i===0?'active':''}"></div>`).join('');
 
         const track = document.getElementById('track');
-        const rootWidth = root.offsetWidth;
+        const arrowLeft = document.getElementById('carousel-prev');
+        const arrowRight = document.getElementById('carousel-next');
 
         function updateImage() {
             currentTranslate = index * -root.offsetWidth;
@@ -1617,6 +1652,19 @@ function renderList(filter = 'All') {
                 dot.classList.toggle("active", i === index);
             });
         }
+
+        // Arrow Event Listeners
+        arrowRight.onclick = (e) => {
+            e.stopPropagation();
+            index = (index + 1) % images.length;
+            updateImage();
+        };
+
+        arrowLeft.onclick = (e) => {
+            e.stopPropagation();
+            index = (index - 1 + images.length) % images.length;
+            updateImage();
+        };
 
         // Touch Events
         track.addEventListener('touchstart', e => {
@@ -1637,7 +1685,6 @@ function renderList(filter = 'All') {
             const endX = e.changedTouches[0].clientX;
             const diff = endX - startX;
             
-            // USES images.length DYNAMICALLY
             if (diff < -40 && index < images.length - 1) index++;
             else if (diff > 40 && index > 0) index--;
             
@@ -1723,7 +1770,6 @@ if (status.text === "Open 24/7") {
         
         renderCommunitySection();
         
-        // PASS FULL IMAGE ARRAY WITHOUT SLICING
         setupImageCarousel(selectedCafe.images.length ? selectedCafe.images : ["https://via.placeholder.com/400x300?text=No+Image"]);
 
         navTo('screen-detail');
