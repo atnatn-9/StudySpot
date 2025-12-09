@@ -278,14 +278,6 @@
     .compare-item:hover { border-color: var(--accent-cyan); background: var(--glass-surface); }
     .cmp-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 2px; }
 
-    .carousel-container { width: 100%; height: 100%; overflow: hidden; position: relative; mask-image: linear-gradient(to bottom, black 60%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%); }
-    .carousel-track { display: flex; height: 100%; transition: transform 0.3s ease-out; }
-    .carousel-slide { min-width: 100%; height: 100%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-    .carousel-slide img { width: 100%; height: 100%; object-fit: cover; }
-    .carousel-dots { position: absolute; bottom: 80px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; z-index: 50; }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.4); transition: 0.3s; }
-    .dot.active { background: #fff; box-shadow: 0 0 10px rgba(255,255,255,0.5); width: 20px; border-radius: 4px; }
-
     .lightbox-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); z-index: 5000; display: none; align-items: center; justify-content: center; flex-direction: column; backdrop-filter: blur(15px); opacity: 0; transition: opacity 0.3s; }
     .lightbox-overlay.active { display: flex; opacity: 1; }
     .lightbox-img { max-width: 100%; max-height: 80%; border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
@@ -392,17 +384,47 @@
         }
     }
 
-    /* REQUIRED FIX: Oversized Image Prevention */
-    .cafe-image-main {
-        overflow: hidden !important;
+    /* --- NEW CAROUSEL STYLES --- */
+    .cafe-carousel {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .carousel-image {
+        width: 100%;
+        height: 100%;
         background-size: cover !important;
         background-position: center !important;
     }
 
-    .cafe-image-main img {
-        width: 100% !important;
-        height: 100% !important;
-        object-fit: cover !important;
+    /* Arrow buttons */
+    .carousel-arrow {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.28);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.4);
+        color: white;
+        font-size: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 20;
+    }
+
+    .left-arrow { left: 10px; }
+    .right-arrow { right: 10px; }
+
+    .carousel-arrow:active {
+        transform: translateY(-50%) scale(0.92);
     }
 </style>
 </head>
@@ -507,8 +529,11 @@
     <div class="scroll-view">
         <!-- Carousel Container -->
         <div class="hero-section">
-            <div id="carousel-root" class="carousel-container"></div>
-            <div id="carousel-dots" class="carousel-dots"></div>
+            <div class="cafe-carousel">
+                <div class="carousel-image" id="carouselImage"></div>
+                <button class="carousel-arrow left-arrow" id="arrowLeft">‹</button>
+                <button class="carousel-arrow right-arrow" id="arrowRight">›</button>
+            </div>
             
             <div style="position: absolute; bottom: 30px; left: 24px; right: 24px; z-index: 60;">
                 <h1 id="detail-title">Title</h1>
@@ -1600,67 +1625,28 @@ function renderList(filter = 'All') {
     }
 
     /* --- CAROUSEL LOGIC --- */
-    function setupImageCarousel(images) {
+    function initCarousel(images) {
         let index = 0;
-        let startX = 0;
-        let currentTranslate = 0;
-        let prevTranslate = 0;
-        let isDragging = false;
 
-        const root = document.getElementById('carousel-root');
-        const dotsContainer = document.getElementById('carousel-dots');
-        
-        // Render HTML - USES ALL IMAGES
-        // FIX: Added 'cafe-image-main' to class list to apply required CSS constraints
-        root.innerHTML = `<div class="carousel-track" id="track">
-            ${images.map(src => `<div class="carousel-slide cafe-image-main"><img src="${src}" onclick="openLightbox('${src}')"></div>`).join('')}
-        </div>`;
-        
-        // Render Dots - USES ALL IMAGES
-        dotsContainer.innerHTML = images.map((_, i) => `<div class="dot ${i===0?'active':''}"></div>`).join('');
+        const imgBox = document.getElementById("carouselImage");
+        const leftBtn = document.getElementById("arrowLeft");
+        const rightBtn = document.getElementById("arrowRight");
 
-        const track = document.getElementById('track');
-        const rootWidth = root.offsetWidth;
-
-        function updateImage() {
-            currentTranslate = index * -root.offsetWidth;
-            prevTranslate = currentTranslate;
-            track.style.transform = `translateX(${currentTranslate}px)`;
-            
-            Array.from(dotsContainer.children).forEach((dot, i) => {
-                dot.classList.toggle("active", i === index);
-            });
+        function update() {
+            imgBox.style.backgroundImage = `url('${images[index]}')`;
         }
 
-        // Touch Events
-        track.addEventListener('touchstart', e => {
-            isDragging = true;
-            startX = e.touches[0].clientX;
-            track.style.transition = 'none';
-        });
+        rightBtn.onclick = () => {
+            index = (index + 1) % images.length;
+            update();
+        };
 
-        track.addEventListener('touchmove', e => {
-            if (!isDragging) return;
-            const currentX = e.touches[0].clientX;
-            const diff = currentX - startX;
-            track.style.transform = `translateX(${prevTranslate + diff}px)`;
-        });
+        leftBtn.onclick = () => {
+            index = (index - 1 + images.length) % images.length;
+            update();
+        };
 
-        track.addEventListener('touchend', e => {
-            isDragging = false;
-            const endX = e.changedTouches[0].clientX;
-            const diff = endX - startX;
-            
-            // USES images.length DYNAMICALLY
-            if (diff < -40 && index < images.length - 1) index++;
-            else if (diff > 40 && index > 0) index--;
-            
-            track.style.transition = 'transform 0.3s ease-out';
-            updateImage();
-        });
-
-        // Initialize state
-        setTimeout(updateImage, 50);
+        update();
     }
 
     /* --- GALLERY & CONTRIBUTIONS --- */
@@ -1737,8 +1723,7 @@ if (status.text === "Open 24/7") {
         
         renderCommunitySection();
         
-        // PASS FULL IMAGE ARRAY WITHOUT SLICING
-        setupImageCarousel(selectedCafe.images.length ? selectedCafe.images : ["https://via.placeholder.com/400x300?text=No+Image"]);
+        initCarousel(selectedCafe.images.length ? selectedCafe.images : ["https://via.placeholder.com/400x300?text=No+Image"]);
 
         navTo('screen-detail');
     }
