@@ -280,22 +280,9 @@
 
     .carousel-container { width: 100%; height: 100%; overflow: hidden; position: relative; mask-image: linear-gradient(to bottom, black 60%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%); }
     .carousel-track { display: flex; height: 100%; transition: transform 0.3s ease-out; }
-    
-    /* PATCH 1 & 2: Mobile Swipe Fix */
-    .carousel-track {
-        pointer-events: auto !important;
-        touch-action: manipulation !important; /* Covers pan-x pan-y */
-        position: relative !important;
-        z-index: 9999 !important;
-    }
-    .carousel-track * {
-        pointer-events: none !important;
-    }
-
     .carousel-slide { min-width: 100%; height: 100%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
     .carousel-slide img { width: 100%; height: 100%; object-fit: cover; }
     .carousel-dots { position: absolute; bottom: 80px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; z-index: 50; }
-    .carousel-dots, .carousel-indicators { pointer-events: none !important; }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.4); transition: 0.3s; }
     .dot.active { background: #fff; box-shadow: 0 0 10px rgba(255,255,255,0.5); width: 20px; border-radius: 4px; }
 
@@ -1599,7 +1586,7 @@ function renderList(filter = 'All') {
         });
     }
 
-    /* --- CAROUSEL LOGIC (PATCHED FOR MOBILE SWIPE) --- */
+    /* --- CAROUSEL LOGIC --- */
     function setupImageCarousel(images) {
         let index = 0;
         let startX = 0;
@@ -1617,8 +1604,7 @@ function renderList(filter = 'All') {
         dotsContainer.innerHTML = images.map((_, i) => `<div class="dot ${i===0?'active':''}"></div>`).join('');
 
         const track = document.getElementById('track');
-        // Alias imgBox to track for consistency with patch instructions
-        const imgBox = track;
+        const rootWidth = root.offsetWidth;
 
         function updateImage() {
             currentTranslate = index * -root.offsetWidth;
@@ -1630,29 +1616,31 @@ function renderList(filter = 'All') {
             });
         }
 
-        // Virtual buttons logic to support swipe actions
-        const nextBtn = { click: () => { if(index < images.length - 1) index++; updateImage(); } };
-        const prevBtn = { click: () => { if(index > 0) index--; updateImage(); } };
-
-        // 1. TouchStart (Patched with passive: true and capture: true)
-        imgBox.addEventListener("touchstart", e => {
+        // Touch Events
+        track.addEventListener('touchstart', e => {
+            isDragging = true;
             startX = e.touches[0].clientX;
-        }, { passive: true, capture: true });
+            track.style.transition = 'none';
+        });
 
-        // 2. TouchMove (Preserved for UI sliding animation, added passive: true)
-        imgBox.addEventListener('touchmove', e => {
+        track.addEventListener('touchmove', e => {
             if (!isDragging) return;
             const currentX = e.touches[0].clientX;
             const diff = currentX - startX;
             track.style.transform = `translateX(${prevTranslate + diff}px)`;
-        }, { passive: true });
+        });
 
-        // 3. TouchEnd (Patched with passive: true, capture: true and threshold logic)
-        imgBox.addEventListener("touchend", e => {
-            let endX = e.changedTouches[0].clientX;
-            if (endX < startX - 40) nextBtn.click();
-            if (endX > startX + 40) prevBtn.click();
-        }, { passive: true, capture: true });
+        track.addEventListener('touchend', e => {
+            isDragging = false;
+            const endX = e.changedTouches[0].clientX;
+            const diff = endX - startX;
+            
+            if (diff < -40 && index < images.length - 1) index++;
+            else if (diff > 40 && index > 0) index--;
+            
+            track.style.transition = 'transform 0.3s ease-out';
+            updateImage();
+        });
 
         // Initialize state
         setTimeout(updateImage, 50);
@@ -1732,10 +1720,7 @@ if (status.text === "Open 24/7") {
         
         renderCommunitySection();
         
-        // PATCH: Wrapped in setTimeout to ensure DOM is ready
-        setTimeout(() => {
-            setupImageCarousel(selectedCafe.images.length ? selectedCafe.images : ["https://via.placeholder.com/400x300?text=No+Image"]);
-        }, 0);
+        setupImageCarousel(selectedCafe.images.length ? selectedCafe.images : ["https://via.placeholder.com/400x300?text=No+Image"]);
 
         navTo('screen-detail');
     }
