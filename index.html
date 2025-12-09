@@ -1112,7 +1112,7 @@ aiCrowdScore: 15,
     hotline: "0334626989",
     note: "Super spacious; great for deadlines or group discussions.",
     isFavorite: false,
-    lat: 10.782997412878819, lng: 106.68985385337301, 
+    lat: 10.782997412878819, lng: 106.68945385337301, 
 
     aiCrowdScore: 62,
     finalCrowdScore: 57,
@@ -1597,10 +1597,12 @@ function renderList(filter = 'All') {
         const root = document.getElementById('carousel-root');
         const dotsContainer = document.getElementById('carousel-dots');
         
-        // Render HTML
+        // Render HTML - USES ALL IMAGES
         root.innerHTML = `<div class="carousel-track" id="track">
             ${images.map(src => `<div class="carousel-slide"><img src="${src}" onclick="openLightbox('${src}')"></div>`).join('')}
         </div>`;
+        
+        // Render Dots - USES ALL IMAGES
         dotsContainer.innerHTML = images.map((_, i) => `<div class="dot ${i===0?'active':''}"></div>`).join('');
 
         const track = document.getElementById('track');
@@ -1635,6 +1637,7 @@ function renderList(filter = 'All') {
             const endX = e.changedTouches[0].clientX;
             const diff = endX - startX;
             
+            // USES images.length DYNAMICALLY
             if (diff < -40 && index < images.length - 1) index++;
             else if (diff > 40 && index > 0) index--;
             
@@ -1720,6 +1723,7 @@ if (status.text === "Open 24/7") {
         
         renderCommunitySection();
         
+        // PASS FULL IMAGE ARRAY WITHOUT SLICING
         setupImageCarousel(selectedCafe.images.length ? selectedCafe.images : ["https://via.placeholder.com/400x300?text=No+Image"]);
 
         navTo('screen-detail');
