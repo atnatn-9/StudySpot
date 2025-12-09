@@ -1,0 +1,2013 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StudySpot - AI Analytics Edition</title>
+<!-- Fonts & Icons -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<style>
+    /* --- 1. Design Tokens --- */
+    :root {
+        /* PALETTE 3 — Sage Green Zen Productivity (LIGHT DEFAULT) */
+        --bg-color: #F2F4F1;
+        --phone-bg: linear-gradient(180deg, #F2F4F1 0%, #E6E9E5 100%);
+        
+        --glass-surface: rgba(255, 255, 255, 0.45); 
+        --glass-surface-hover: rgba(255, 255, 255, 0.65);
+        --glass-border: 1px solid rgba(255, 255, 255, 0.6);
+        --glass-shadow: 0 8px 32px 0 rgba(79, 94, 82, 0.08);
+        --backdrop-blur: blur(25px);
+        
+        --text-white: #2A2A2A; 
+        --text-muted: rgba(42, 42, 42, 0.55);
+        
+        --accent-sage: #7C8F7A;
+        --accent-sage-light: #A7B8A2;
+        --accent-sage-dark: #4F5E52;
+        
+        --accent-cyan: #7C8F7A;
+        --accent-purple: #4F5E52;
+        --accent-gradient: linear-gradient(135deg, #7C8F7A 0%, #4F5E52 100%);
+        
+        --color-blue: #6B8CA8;   
+        --color-green: #7C8F7A;  
+        --color-orange: #D4A373; 
+        --color-red: #C85555;
+        
+        --xp-track: rgba(0,0,0,0.06);
+        --xp-text: rgba(0,0,0,0.5);
+    }
+
+    /* --- DARK MODE OVERRIDES --- */
+    [data-theme="dark"] {
+        --bg-color: #0F1512;
+        --phone-bg: radial-gradient(circle at 50% 0%, #1a221f 0%, #0F1512 80%);
+        
+        --glass-surface: rgba(20, 25, 22, 0.65); 
+        --glass-surface-hover: rgba(40, 50, 45, 0.75);
+        --glass-border: 1px solid rgba(255, 255, 255, 0.08);
+        --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
+        --backdrop-blur: blur(20px);
+        
+        --text-white: #EAEAEA;
+        --text-muted: rgba(255, 255, 255, 0.55);
+        
+        --accent-sage: #8FAF9C;
+        --accent-sage-light: #A7C4AE;
+        --accent-sage-dark: #5E7A68;
+        
+        --accent-cyan: #8FAF9C; 
+        --accent-purple: #A7C4AE;
+        --accent-gradient: linear-gradient(135deg, #8FAF9C 0%, #5d7a6f 100%);
+        
+        --color-blue: #8AB4D5;
+        --color-green: #8FAF9C;
+        --color-orange: #E6B88A;
+        --color-red: #E07A7A;
+        
+        --xp-track: rgba(255,255,255,0.1);
+        --xp-text: rgba(255,255,255,0.6);
+    }
+
+    /* FEATURE: Responsive Font Scaling */
+    html {
+        font-size: clamp(12px, 2.3vw, 16px);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+    
+    body { 
+        background-color: #111 !important; 
+        display: flex; justify-content: center; align-items: center; min-height: 100vh; 
+        background-image: none;
+    }
+
+    /* FEATURE: Responsive Frame */
+    #app-frame {
+        width: 100%;
+        max-width: 430px;
+        height: 100vh;
+        max-height: 100vh;
+        margin: auto;
+        border-radius: 32px;
+        
+        background: var(--phone-bg); 
+        position: relative; overflow: hidden;
+        box-shadow: 0 0 0 12px #222, 0 20px 50px rgba(0,0,0,0.5);
+        transition: background 0.5s ease;
+        color: var(--text-white);
+    }
+    
+    .orb { position: absolute; border-radius: 50%; filter: blur(90px); z-index: 0; opacity: 0.6; }
+    .orb-1 { width: 350px; height: 350px; background: #A7B8A2; top: -100px; left: -80px; opacity: 0.5; }
+    .orb-2 { width: 300px; height: 300px; background: #D1D8D0; bottom: -50px; right: -50px; opacity: 0.6; }
+    
+    [data-theme="dark"] .orb-1 { background: #2f3d36; opacity: 0.4; }
+    [data-theme="dark"] .orb-2 { background: #1c2923; opacity: 0.4; }
+
+    .dynamic-island {
+        position: absolute; top: 11px; left: 50%; transform: translateX(-50%);
+        width: 120px; height: 35px; background-color: #1a1a1a; border-radius: 20px;
+        z-index: 1000; pointer-events: none;
+    }
+
+    .screen {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        display: none; flex-direction: column; z-index: 1;
+        overflow: hidden; color: var(--text-white); 
+    }
+    .screen.active { display: flex; animation: fadeIn 0.4s cubic-bezier(0.22, 1, 0.36, 1); }
+    
+    /* FEATURE: Adjusted Scroll View Height */
+    .scroll-view { 
+        flex: 1; overflow-y: auto; width: 100%; padding-bottom: 120px; scrollbar-width: none;
+        height: calc(100vh - 150px);
+    }
+    .scroll-view::-webkit-scrollbar { display: none; }
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.99); } to { opacity: 1; transform: scale(1); } }
+
+    .col { display: flex; flex-direction: column; }
+    .row { display: flex; flex-direction: row; }
+    .center { align-items: center; justify-content: center; }
+    .mb-16 { margin-bottom: 16px; }
+    h1 { font-size: 26px; font-weight: 800; color: var(--text-white); letter-spacing: -0.5px; } 
+    h2 { font-size: 18px; font-weight: 700; margin-bottom: 12px; color: var(--text-white); } 
+    p { font-size: 14px; color: var(--text-muted); }
+
+    .btn { display: flex; align-items: center; justify-content: center; padding: 14px 20px; border-radius: 16px; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.3s; border: none; outline: none; gap: 8px; }
+    .btn-glass { 
+        background: var(--glass-surface);
+        backdrop-filter: blur(12px);
+        border: var(--glass-border);
+        color: var(--text-white);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    }
+    [data-theme="light"] .btn-glass { background: rgba(255,255,255,0.6); }
+    [data-theme="dark"] .btn-glass { background: rgba(255,255,255,0.05); box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+    .btn-glass:active { transform: scale(0.96); background: var(--glass-surface-hover); }
+    
+    .btn-primary { 
+        background: var(--accent-gradient);
+        color: #fff; 
+        border: none;
+        box-shadow: 0 8px 20px rgba(79, 94, 82, 0.25);
+        border-radius: 30px; 
+        font-weight: 700;
+    }
+    .btn-primary:active { transform: scale(0.96); opacity: 0.95; }
+
+    .btn-back { position: absolute; top: 50px; left: 24px; width: 44px; height: 44px; border-radius: 14px; background: rgba(255,255,255,0.6); backdrop-filter: blur(12px); border: var(--glass-border); display: flex; align-items: center; justify-content: center; color: var(--text-white); cursor: pointer; z-index: 2000; transition: 0.2s; box-shadow: var(--glass-shadow); }
+    .btn-back:active { transform: scale(0.9); }
+
+    .input-glass, .select-glass { 
+        width: 100%; padding: 16px; border-radius: 18px; 
+        background: rgba(255,255,255,0.4); 
+        border: 1px solid rgba(0,0,0,0.05);
+        color: var(--text-white); font-size: 15px; outline: none; margin-bottom: 16px; 
+        transition: 0.3s;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+    }
+    [data-theme="light"] .input-glass { background: rgba(255,255,255,0.5); border-color: rgba(0,0,0,0.05); }
+    [data-theme="dark"] .input-glass { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); box-shadow: none; }
+    [data-theme="dark"] .input-glass:focus { background: rgba(255,255,255,0.1); border-color: var(--accent-sage); }
+    .input-glass:focus { background: rgba(255,255,255,0.8); border-color: var(--accent-cyan); box-shadow: 0 0 0 3px rgba(124, 143, 122, 0.15); }
+    textarea.input-glass { resize: none; height: 80px; font-family: 'Inter', sans-serif; }
+
+    /* === SEARCH BAR STYLE FIX === */
+    .search-bar-glass {
+        background: rgba(255,255,255,0.4);
+        padding: 14px 16px; 
+        border-radius: 20px; 
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.02); 
+        margin-bottom: 24px; 
+        gap: 10px; 
+        align-items: center; 
+        border: 1px solid rgba(255,255,255,0.5); 
+        backdrop-filter: blur(5px);
+    }
+    [data-theme="dark"] .search-bar-glass {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        box-shadow: none;
+    }
+    ::placeholder { color: var(--text-muted); opacity: 1; }
+
+    .chip-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 4px 24px; scrollbar-width: none; margin-bottom: 16px; }
+    .chip { padding: 10px 18px; border-radius: 24px; font-size: 13px; font-weight: 600; background: rgba(255,255,255,0.5); border: 1px solid rgba(0,0,0,0.05); color: var(--text-muted); white-space: nowrap; transition: 0.3s; cursor: pointer; backdrop-filter: blur(8px); }
+    [data-theme="dark"] .chip { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); }
+    .chip.active { background: var(--accent-gradient); color: #fff; border-color: transparent; box-shadow: 0 4px 15px rgba(79, 94, 82, 0.3); }
+
+    .cafe-card { 
+        background: var(--glass-surface);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: var(--glass-border);
+        box-shadow: var(--glass-shadow);
+        border-radius: 24px; padding: 16px; display: flex; align-items: center; gap: 16px; margin: 0 24px 16px 24px; cursor: pointer; transition: transform 0.2s; 
+    }
+    .cafe-card:active { transform: scale(0.98); }
+    .card-img { width: 70px; height: 70px; border-radius: 18px; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    .card-info { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+    
+    .crowd-bar-bg { width: 100px; height: 6px; background: rgba(0,0,0,0.08); border-radius: 4px; overflow: hidden; }
+    [data-theme="light"] .crowd-bar-bg { background: rgba(0,0,0,0.08); }
+    [data-theme="dark"] .crowd-bar-bg { background: rgba(255,255,255,0.1); }
+    .crowd-bar-fill { height: 100%; border-radius: 4px; }
+    
+    .unlock-block { margin: 20px 24px; padding: 30px; border-radius: 24px; background: rgba(255,255,255,0.4); border: 1px dashed rgba(0,0,0,0.15); text-align: center; backdrop-filter: blur(5px); }
+    [data-theme="light"] .unlock-block { background: rgba(255,255,255,0.4); border-color: rgba(0,0,0,0.1); }
+    [data-theme="dark"] .unlock-block { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.1); }
+
+    .hero-section { position: relative; width: 100%; height: 320px; }
+    #detail-title { color: #FFFFFF !important; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+    .status-row { display: flex; gap: 10px; align-items: center; font-size: 14px; font-weight: 700; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+    .status-open { color: var(--color-green); text-shadow:none; background: rgba(255,255,255,0.9); padding: 4px 10px; border-radius: 12px; }
+    .status-closed { color: var(--color-red); text-shadow:none; background: rgba(255,255,255,0.9); padding: 4px 10px; border-radius: 12px; }
+    .close-hour { color: #fff; opacity: 1; text-shadow: 0 2px 4px rgba(0,0,0,0.4); }
+
+    .btn-like-float {
+        position: absolute; top: 50px; right: 24px;
+        width: 44px; height: 44px; border-radius: 50%;
+        background: var(--accent-sage-dark); 
+        backdrop-filter: blur(12px);
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; z-index: 2000;
+        border: none; transition: transform 0.2s;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    .btn-like-float:active { transform: scale(0.9); }
+
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+    .info-box { background: var(--glass-surface); border: var(--glass-border); backdrop-filter: blur(10px); padding: 16px; border-radius: 20px; text-align: center; display: flex; flex-direction: column; gap: 6px; }
+    .info-value { font-weight: 700; font-size: 15px; }
+
+    .chart-box { background: var(--glass-surface); border: var(--glass-border); backdrop-filter: blur(10px); padding: 20px; border-radius: 24px; box-shadow: var(--glass-shadow); margin-bottom: 24px; }
+    .chart-bars { display: flex; align-items: flex-end; justify-content: space-between; height: 100px; padding-top: 20px; gap: 6px; }
+    
+    .bar-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; flex: 1; gap: 4px; cursor: pointer; position: relative; }
+    .bar { width: 100%; border-radius: 6px 6px 0 0; min-height: 10px; opacity: 0.6; background: var(--text-muted); transition: 0.3s; }
+    .bar-label { font-size: 9px; color: var(--text-muted); }
+    .bar-col.active .bar { opacity: 1; background: var(--accent-gradient); box-shadow: 0 0 15px rgba(124, 143, 122, 0.4); }
+    
+    select { color: var(--text-white); background-color: rgba(255,255,255,0.5); backdrop-filter: blur(10px); border:none; }
+    select option { background-color: #F2F4F1; color: #2A2A2A; padding: 10px; }
+    [data-theme="light"] select option { background-color: #FFFFFF; color: #333333; }
+    [data-theme="dark"] select option { background-color: #0F1512; color: #EAEAEA; }
+
+    .timeline { position: relative; padding-left: 20px; border-left: 2px solid rgba(0,0,0,0.1); margin-left: 10px; display: flex; flex-direction: column; gap: 20px; }
+    [data-theme="dark"] .timeline { border-left-color: rgba(255,255,255,0.1); }
+    .timeline-item { position: relative; animation: slideUp 0.3s ease-out; }
+    .timeline-dot { position: absolute; left: -26px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent-cyan); box-shadow: 0 0 8px rgba(124, 143, 122, 0.4); }
+    .comment-box { background: var(--glass-surface); border: var(--glass-border); padding: 12px; border-radius: 12px; font-size: 13px; line-height: 1.4; color: var(--text-white); }
+    
+    .contribution-img { width: 100%; max-height: 200px; border-radius: 8px; object-fit: cover; margin-top: 10px; border: 1px solid rgba(255,255,255,0.4); cursor: pointer; transition: 0.2s; background: rgba(0,0,0,0.05); }
+    [data-theme="dark"] .contribution-img { border-color: rgba(255,255,255,0.1); }
+    .contribution-img:active { transform: scale(0.98); opacity: 0.8; }
+
+    .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+    .gallery-item { aspect-ratio: 1; width: 100%; border-radius: 12px; object-fit: cover; cursor: pointer; border: 1px solid rgba(255,255,255,0.5); transition: transform 0.2s; background: rgba(0,0,0,0.05); }
+    [data-theme="dark"] .gallery-item { border-color: rgba(255,255,255,0.1); }
+    .gallery-item:active { transform: scale(0.95); }
+
+    .compare-grid { display: grid; grid-template-columns: 1fr 1px 1fr; gap: 10px; text-align: center; }
+    .compare-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: transparent; border-radius: 12px; cursor: pointer; border: 1px solid transparent; color: var(--text-white); }
+    .compare-item:hover { border-color: var(--accent-cyan); background: var(--glass-surface); }
+    .cmp-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 2px; }
+
+    .carousel-container { width: 100%; height: 100%; overflow: hidden; position: relative; mask-image: linear-gradient(to bottom, black 60%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%); }
+    .carousel-track { display: flex; height: 100%; transition: transform 0.3s ease-out; }
+    .carousel-slide { min-width: 100%; height: 100%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+    .carousel-slide img { width: 100%; height: 100%; object-fit: cover; }
+    .carousel-dots { position: absolute; bottom: 80px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; z-index: 50; }
+    .carousel-dots, .carousel-indicators { pointer-events: none !important; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.4); transition: 0.3s; }
+    .dot.active { background: #fff; box-shadow: 0 0 10px rgba(255,255,255,0.5); width: 20px; border-radius: 4px; }
+
+    .lightbox-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); z-index: 5000; display: none; align-items: center; justify-content: center; flex-direction: column; backdrop-filter: blur(15px); opacity: 0; transition: opacity 0.3s; }
+    .lightbox-overlay.active { display: flex; opacity: 1; }
+    .lightbox-img { max-width: 100%; max-height: 80%; border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+    .lightbox-close { position: absolute; top: 40px; right: 20px; width: 40px; height: 40px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; cursor: pointer; border: 1px solid rgba(255,255,255,0.2); }
+
+    .bottom-nav { position: absolute; bottom: 20px; left: 20px; right: 20px; width: auto; height: 70px; background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid rgba(255,255,255,0.9); border-radius: 35px; display: flex; justify-content: space-around; align-items: center; z-index: 900; transition: transform 0.3s ease-out; box-shadow: 0 10px 40px rgba(79, 94, 82, 0.15); }
+    [data-theme="light"] .bottom-nav { background: rgba(255, 255, 255, 0.85); border: 1px solid rgba(255,255,255,0.9); box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+    [data-theme="dark"] .bottom-nav { background: rgba(15, 21, 18, 0.85); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+    
+    .nav-icon { display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--text-muted); font-size: 10px; font-weight: 500; cursor: pointer; width: 20%; }
+    .nav-icon i { font-size: 24px; margin-bottom: 2px; transition: 0.2s; }
+    .nav-icon.active { color: var(--accent-sage-dark); }
+    [data-theme="light"] .nav-icon.active { color: var(--accent-sage-dark); }
+    [data-theme="dark"] .nav-icon.active { color: var(--accent-sage); }
+    .nav-icon.active i { transform: translateY(-4px); filter: drop-shadow(0 4px 6px rgba(124, 143, 122, 0.3)); }
+    [data-theme="light"] .nav-icon.active i { filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1)); }
+
+    .profile-avatar { width: 110px; height: 110px; border-radius: 50%; background: rgba(255,255,255,0.5); border: 3px solid rgba(255,255,255,0.6); box-shadow: 0 8px 30px rgba(124, 143, 122, 0.2); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; position: relative; z-index: 1; font-size: 40px; color: var(--text-muted); }
+    [data-theme="dark"] .profile-avatar { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
+    .profile-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+    .level-badge { background: var(--accent-gradient); padding: 4px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; color: #fff; margin-top: 4px; display: inline-block; box-shadow: 0 4px 15px rgba(124, 143, 122, 0.4); }
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; width: 100%; margin-bottom: 30px; }
+    .stat-card { background: var(--glass-surface); border: var(--glass-border); border-radius: 20px; padding: 16px 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; box-shadow: var(--glass-shadow); }
+    .xp-bar-bg { height: 10px; background: var(--xp-track); border-radius: 10px; overflow:hidden; }
+    .xp-text-label { font-size:12px; margin-bottom:8px; color: var(--xp-text); font-weight: 600; }
+
+    .avatar-edit-btn { position: absolute; bottom: 0; right: 0; width: 32px; height: 32px; background: var(--accent-cyan); border-radius: 50%; border: 3px solid #F2F4F1; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+    [data-theme="dark"] .avatar-edit-btn { border-color: #0F1512; color: #0F1512; }
+    .avatar-edit-btn:active { transform: scale(0.9); }
+
+    .modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.3); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(8px); }
+    .modal-card { width: 90%; background: rgba(255, 255, 255, 0.85); border: 1px solid rgba(255,255,255,0.9); padding: 30px 24px; border-radius: 32px; box-shadow: 0 20px 60px rgba(0,0,0,0.1); text-align: center; animation: slideUp 0.3s ease-out; color: var(--text-white); }
+    [data-theme="light"] .modal-card { background: rgba(255,255,255,0.9); border-color: #fff; box-shadow: 0 20px 60px rgba(0,0,0,0.1); color: #333; }
+    [data-theme="dark"] .modal-card { background: #1a201d; border-color: rgba(255,255,255,0.1); box-shadow: 0 20px 60px rgba(0,0,0,0.7); }
+    @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    .input-bars { display: flex; gap: 4px; height: 30px; margin-bottom: 8px; align-items: flex-end; }
+    .input-bar { flex: 1; background: rgba(0,0,0,0.08); border-radius: 4px; cursor: pointer; transition: 0.2s; }
+    [data-theme="dark"] .input-bar { background: rgba(255,255,255,0.1); }
+    .input-bar.filled { background: var(--accent-cyan); box-shadow: 0 0 10px rgba(124, 143, 122, 0.3); }
+    
+    .btn-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.6); box-shadow: 0 4px 10px rgba(0,0,0,0.05); cursor: pointer; transition: 0.2s; border: var(--glass-border); outline: none;}
+    .btn-icon:active { transform: scale(0.9); }
+
+    .theme-toggle-row { display: flex; gap: 30px; margin: 40px 0; background: rgba(255,255,255,0.4); padding: 10px 30px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.5); backdrop-filter: blur(10px); }
+    [data-theme="light"] .theme-toggle-row { background: rgba(255,255,255,0.5); border-color: rgba(255,255,255,0.6); }
+    [data-theme="dark"] .theme-toggle-row { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
+    
+    .theme-icon-btn { font-size: 24px; color: var(--text-muted); cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; }
+    .theme-icon-btn.active { color: var(--accent-cyan); transform: scale(1.2); filter: drop-shadow(0 0 10px rgba(124, 143, 122, 0.4)); }
+    [data-theme="light"] .theme-icon-btn.active { color: var(--accent-cyan); filter: drop-shadow(0 0 8px rgba(124, 143, 122, 0.4)); }
+
+    .achievements-scroll { display: flex; gap: 12px; overflow-x: auto; padding: 4px 4px 16px 4px; scrollbar-width: none; }
+    .achievements-scroll::-webkit-scrollbar { display: none; }
+    .achievement-card { min-width: 160px; width: 160px; background: rgba(255, 255, 255, 0.55); border: var(--glass-border); border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 8px; box-shadow: var(--glass-shadow); position: relative; transition: 0.3s; backdrop-filter: blur(10px); }
+    [data-theme="dark"] .achievement-card { background: rgba(255,255,255,0.03); }
+    .achievement-card.locked { opacity: 0.6; filter: grayscale(0.8); }
+    .achievement-icon-box { width: 36px; height: 36px; border-radius: 10px; background: rgba(255,255,255,0.5); display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    [data-theme="dark"] .achievement-icon-box { background: rgba(255,255,255,0.1); }
+
+    /* FEATURE 3: Responsive Behavior - UPDATED */
+    @media (min-width: 768px) {
+        body {
+            background-color: #000000 !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            min-height: 100vh !important;
+            margin: 0 !important;
+            padding: 20px !important;
+            box-sizing: border-box !important;
+        }
+
+        #app-frame {
+            width: 100% !important;
+            max-width: 430px !important;
+            height: 90vh !important;
+            max-height: 932px !important;
+            border-radius: 48px !important;
+            box-shadow: 0 0 0 14px #1a1a1a, 0 30px 60px rgba(0,0,0,0.6) !important;
+            margin: auto !important;
+            position: relative !important;
+            overflow: hidden !important;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .phone-frame {
+            display: none !important;
+        }
+        .dynamic-island, .phone-notch, .notch {
+            display: none !important;
+        }
+        #app-frame {
+            width: 100vw;
+            height: 100vh;
+            border-radius: 0;
+            box-shadow: none;
+            max-width: none;
+            max-height: none;
+            margin: 0;
+            border: none;
+        }
+    }
+</style>
+</head>
+<body>
+<div id="app-frame">
+    <!-- Floating Orbs for Glass Effect (Inside Phone Only) -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="dynamic-island"></div>
+    <!-- === SCREEN 1: HOME (DEFAULT ACTIVE) === -->
+<div id="screen-home" class="screen active">
+    <div class="col" style="padding: 60px 24px 10px; z-index: 50;">
+        <div class="row center mb-16" style="gap: 10px; justify-content: flex-start;">
+            <i class="ph-fill ph-coffee" style="font-size: 28px; color: var(--accent-cyan);"></i>
+            <h1 style="margin: 0;">StudySpot</h1>
+        </div>
+
+        <p style="margin-bottom: 16px;">Find the best workspace for you</p>
+        <!-- REPLACED INLINE STYLE WITH CLASS .search-bar-glass -->
+        <div class="row search-bar-glass">
+            <i class="ph ph-magnifying-glass" style="color: var(--text-muted); font-size: 20px;"></i>
+            <input type="text" placeholder="Search cafes..." onkeyup="handleSearch(this.value)" style="background:transparent; border:none; color:var(--text-white); width:100%; outline:none;">
+        </div>
+        <div class="chip-scroll">
+            <div class="chip active" onclick="filterList('All', this)">All</div>
+            <div class="chip" onclick="filterList('Quiet', this)">Quiet</div>
+            <div class="chip" onclick="filterList('Strong Connection', this)">Strong Connection</div>
+            <div class="chip" onclick="filterList('Good Drinks', this)">Good Drinks</div>
+            <div class="chip" onclick="filterList('Reasonable Price', this)">Reasonable Price</div>
+            <div class="chip" onclick="filterList('Distance', this)">Distance</div>
+        </div>
+    </div>
+    <div class="scroll-view">
+        <div id="cafe-list-container"></div>
+        
+        <div class="unlock-block" id="home-unlock-block">
+            <h2 style="font-size: 16px; color: var(--text-white);">Unlock more cafés</h2>
+            <p class="mb-16" style="font-size: 12px;">Sign in and Check-In your spot to unlock more places.</p>
+            <div class="row center" style="gap: 12px;">
+                <button class="btn btn-glass" onclick="openLoginModal()">Sign In</button>
+                <button class="btn btn-primary" onclick="openCheckInModal()">Check-In</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- === SCREEN 2: SAVED === -->
+<div id="screen-saved" class="screen">
+    <div class="col" style="padding: 60px 24px 20px;"><h1>Saved Spots</h1></div>
+    <div class="scroll-view"><div id="saved-container" class="col"></div></div>
+</div>
+
+<!-- === SCREEN 3: ACCOUNT === -->
+<div id="screen-account" class="screen">
+    <div id="account-content" class="col center" style="height: 100%; width: 100%;"></div>
+</div>
+
+<!-- === SCREEN 4: ACTIVITY === -->
+<div id="screen-activity" class="screen">
+    <div class="col" style="padding: 60px 24px 20px;"><h1>Activity</h1></div>
+    <div class="scroll-view" style="padding: 0 24px;">
+        <div class="col" style="gap: 16px;">
+            <div style="background: var(--glass-surface); padding: 16px; border-radius: 20px; box-shadow: var(--glass-shadow); display: flex; gap: 12px; border: var(--glass-border); backdrop-filter: blur(10px);">
+                <i class="ph-fill ph-check-circle" style="color: var(--accent-cyan); font-size: 24px;"></i>
+                <div class="col"><span style="font-size: 14px; color: var(--text-white);"><b>Alex</b> checked in at <b>Corner Brew</b></span><span style="font-size: 11px; opacity: 0.6; color: var(--text-muted);">5 mins ago</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- === SCREEN 5: SETTINGS === -->
+<div id="screen-settings" class="screen">
+    <div class="col" style="padding: 60px 24px 20px;"><h1>Settings</h1></div>
+    <div class="col" style="padding: 0 24px; gap: 12px;">
+        <button class="btn btn-glass" style="justify-content: flex-start;">Account Details</button>
+        <button class="btn btn-glass" style="justify-content: flex-start;">Notifications</button>
+        <button class="btn btn-glass" style="justify-content: flex-start;">Privacy & Security</button>
+        <button class="btn btn-glass" style="justify-content: flex-start;">Help & Support</button>
+        
+        <div class="col" style="margin-top: 10px; margin-bottom: 8px;">
+            <span style="font-size: 14px; margin-left: 8px; margin-bottom: 4px; color: var(--text-muted);">Appearance</span>
+            <div class="row" style="background: rgba(255,255,255,0.4); padding: 6px; border-radius: 14px; gap: 10px; border: var(--glass-border); backdrop-filter: blur(10px);">
+                 <button class="btn btn-glass" style="flex:1; box-shadow:none; background:transparent; color: var(--text-muted);" onclick="setTheme('dark')">Dark</button>
+                 <button class="btn btn-glass" style="flex:1; box-shadow:none; background:transparent; color: var(--text-muted);" onclick="setTheme('light')">Light</button>
+            </div>
+        </div>
+
+        <div style="height: 10px;"></div>
+        <button class="btn btn-glass" style="justify-content: center; color: var(--color-red);" onclick="logout()">Sign Out</button>
+    </div>
+</div>
+
+<!-- === SCREEN: DETAIL === -->
+<div id="screen-detail" class="screen">
+    <div class="btn-back" onclick="navTo('screen-home')"><i class="ph-bold ph-arrow-left" style="font-size: 20px;"></i></div>
+    
+    <div class="btn-like-float" id="like-btn" onclick="toggleFavorite()">
+        <i class="ph ph-heart" style="color: #fff; font-size: 20px;"></i>
+    </div>
+    
+    <div class="scroll-view">
+        <!-- Carousel Container -->
+        <div class="hero-section">
+            <div id="carousel-root" class="carousel-container"></div>
+            <div id="carousel-dots" class="carousel-dots"></div>
+            
+            <div style="position: absolute; bottom: 30px; left: 24px; right: 24px; z-index: 60;">
+                <h1 id="detail-title">Title</h1>
+                <div class="status-row" id="detail-status">
+                    <!-- Dynamic Status Here -->
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-body" style="padding: 10px 24px 40px; position: relative; z-index: 20;">
+            
+            <div class="col" style="gap: 12px; margin-bottom: 24px; font-size: 14px; color: var(--text-muted);">
+                <div class="row center" style="justify-content: flex-start; gap: 10px;">
+                    <i class="ph-fill ph-map-pin" style="color: var(--accent-purple);"></i>
+                    <span id="detail-address" style="color: var(--text-white);">Address</span>
+                </div>
+                <div class="row center" style="justify-content: flex-start; gap: 10px;">
+                    <i class="ph-fill ph-phone" style="color: var(--accent-purple);"></i>
+                    <span id="detail-hotline" style="color: var(--text-white);">Hotline</span>
+                </div>
+                 <div class="row center" style="justify-content: flex-start; gap: 10px;">
+                    <i class="ph-fill ph-notebook" style="color: var(--accent-purple);"></i>
+                    <span id="detail-note" style="color: var(--text-white);"></span>
+                </div>
+            </div>
+
+            <div class="info-grid">
+                <div class="info-box"><span class="info-label">WiFi</span><span class="info-value" id="detail-wifi">Good</span></div>
+                <div class="info-box"><span class="info-label">Drinks</span><span class="info-value" id="detail-drinks">Good</span></div>
+                <div class="info-box"><span class="info-label">Service</span><span class="info-value" id="detail-service">Good</span></div>
+                <div class="info-box"><span class="info-label">Price</span><span class="info-value" id="detail-price">$$</span></div>
+            </div>
+
+            <div class="chart-box">
+                <div class="row" style="justify-content: space-between; margin-bottom: 15px; align-items: center;">
+                    <h2 style="margin:0;">Crowd Levels</h2>
+                    <select class="select-glass" style="width: auto; padding: 6px 12px; border-radius: 8px; margin:0; font-size: 12px;" id="chart-day-select">
+                        <option value="Mon">Mon</option>
+                        <option value="Tue">Tue</option>
+                        <option value="Wed" selected>Wed</option>
+                        <option value="Thu">Thu</option>
+                        <option value="Fri">Fri</option>
+                        <option value="Sat">Sat</option>
+                        <option value="Sun">Sun</option>
+                    </select>
+                </div>
+                <div class="chart-bars" id="crowd-chart"></div>
+            </div>
+
+            <div class="col" style="margin-top: 20px;">
+                <h2>Community Contribution</h2>
+                <!-- Gallery Grid -->
+                <div class="gallery-grid" id="community-gallery"></div>
+                <!-- User Contributions Timeline -->
+                <div style="margin-top: 20px;" class="timeline" id="community-timeline"></div>
+            </div>
+
+            <div class="row" style="gap: 12px; margin-top: 40px; padding-bottom: 40px;">
+                <button class="btn btn-glass" style="flex: 1;" onclick="openCompareSelection()">Compare</button>
+                <button class="btn btn-glass" style="flex: 1;" onclick="openCheckInModal()">Check-In</button>
+                <button class="btn btn-primary" style="width: 50px; padding: 0;" onclick="openGoogleMaps()"><i class="ph-bold ph-arrow-up-right" style="font-size: 20px;"></i></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- === COMPARE SCREENS === -->
+<div id="screen-compare-select" class="modal-overlay">
+    <div class="modal-card">
+        <h3 style="color:var(--text-white)">Select a café to compare</h3>
+        <div class="compare-item-list" id="compare-list"></div>
+        <button class="btn btn-glass" style="width:100%; margin-top:16px;" onclick="closeModal('screen-compare-select')">Cancel</button>
+    </div>
+</div>
+
+<div id="screen-compare-result" class="screen">
+    <div class="btn-back" onclick="navTo('screen-detail')"><i class="ph-bold ph-arrow-left" style="font-size: 20px;"></i></div>
+    <div class="col" style="padding: 60px 24px 20px;"><h1>Comparison</h1></div>
+    <div class="scroll-view" style="padding: 0 24px;">
+        <div class="compare-grid" style="margin-top: 20px; align-items: flex-start;">
+            <div class="col center" style="gap: 10px;">
+                <img id="cmp-img-1" style="width: 60px; height: 60px; border-radius: 12px; object-fit: cover;">
+                <b id="cmp-title-1" style="font-size: 14px; color: var(--accent-cyan);"></b>
+                <div class="col center" style="gap: 16px; margin-top: 10px;">
+                    <div class="col center"><span class="cmp-label">WiFi</span><span id="cmp-wifi-1" style="font-size: 13px;"></span></div>
+                    <div class="col center"><span class="cmp-label">Drinks</span><span id="cmp-drinks-1" style="font-size: 13px;"></span></div>
+                    <div class="col center"><span class="cmp-label">Service</span><span id="cmp-service-1" style="font-size: 13px;"></span></div>
+                    <div class="col center"><span class="cmp-label">Price</span><span id="cmp-price-1" style="font-size: 13px;"></span></div>
+                    <div class="col center"><span class="cmp-label">Crowd</span><span id="cmp-crowd-1" style="font-size: 13px;"></span></div>
+                </div>
+            </div>
+            <div class="compare-divider"></div>
+            <div class="col center" style="gap: 10px;">
+                <img id="cmp-img-2" style="width: 60px; height: 60px; border-radius: 12px; object-fit: cover;">
+                <b id="cmp-title-2" style="font-size: 14px; color: var(--text-white);"></b>
+                <div class="col center" style="gap: 16px; margin-top: 10px;">
+                     <div class="col center"><span class="cmp-label">WiFi</span><span id="cmp-wifi-2" style="font-size: 13px;"></span></div>
+                    <div class="col center"><span class="cmp-label">Drinks</span><span id="cmp-drinks-2" style="font-size: 13px;"></span></div>
+                    <div class="col center"><span class="cmp-label">Service</span><span id="cmp-service-2" style="font-size: 13px;"></span></div>
+                    <div class="col center"><span class="cmp-label">Price</span><span id="cmp-price-2" style="font-size: 13px;"></span></div>
+                    <div class="col center"><span class="cmp-label">Crowd</span><span id="cmp-crowd-2" style="font-size: 13px;"></span></div>
+                </div>
+            </div>
+        </div>
+        <div class="col" style="margin-top: 40px; gap: 12px;">
+            <div class="row" style="gap: 10px;">
+                <button id="btn-goto-a" class="btn btn-primary" style="flex:1; font-size: 12px;" onclick="navTo('screen-detail')">Go to this</button>
+                <button id="btn-goto-b" class="btn btn-glass" style="flex:1; font-size: 12px;" onclick="goToCafeB()">Go to that</button>
+            </div>
+            <button class="btn btn-glass" style="width: 100%; border: 1px solid rgba(255,255,255,0.2);" onclick="navTo('screen-detail')">Return</button>
+        </div>
+    </div>
+</div>
+
+<!-- === BOTTOM NAV (Glass Floating) === -->
+<div class="bottom-nav" id="main-nav">
+    <div class="nav-icon active" onclick="navTo('screen-home')"><i class="ph-fill ph-house"></i>Home</div>
+    <div class="nav-icon" onclick="navTo('screen-saved')"><i class="ph-fill ph-heart"></i>Saved</div>
+    <div class="nav-icon" onclick="navTo('screen-account')"><i class="ph-fill ph-user"></i>Account</div>
+    <div class="nav-icon" onclick="navTo('screen-activity')"><i class="ph-fill ph-bell"></i>Activity</div>
+    <div class="nav-icon" onclick="navTo('screen-settings')"><i class="ph-fill ph-gear"></i>Setting</div>
+</div>
+
+<!-- === MODALS === -->
+<div id="modal-login" class="modal-overlay">
+    <div class="modal-card">
+        <div class="col center">
+            <div style="width: 60px; height: 60px; margin-bottom: 16px;"><i class="ph-fill ph-coffee" style="font-size: 30px; color: var(--accent-cyan);"></i></div>
+            <h2 style="margin-bottom: 8px;">Welcome</h2>
+            <p id="login-msg" class="mb-16" style="font-size: 13px; color: var(--text-muted);">Sign in to access features.</p>
+        </div>
+        <input type="email" class="input-glass" placeholder="Email"><input type="password" class="input-glass" placeholder="Password">
+        <button class="btn btn-primary" style="width:100%; margin-bottom: 12px;" onclick="loginUser()">Sign In</button>
+        <div class="divider-text" style="color:var(--text-muted); font-size:12px; margin-bottom:10px;">or continue with</div>
+        <div class="row center" style="gap: 20px; margin: 10px 0;">
+            <button class="btn-icon" onclick="socialLogin('Google')"><i class="ph-fill ph-google-logo" style="font-size: 24px; color: #DB4437;"></i></button>
+            <button class="btn-icon" onclick="socialLogin('Facebook')"><i class="ph-fill ph-facebook-logo" style="font-size: 24px; color: #4267B2;"></i></button>
+            <button class="btn-icon" onclick="socialLogin('Apple')"><i class="ph-fill ph-apple-logo" style="font-size: 24px; color: var(--text-white);"></i></button>
+        </div>
+        <button class="btn btn-glass" style="width:100%; margin-top:8px;" onclick="closeModal('modal-login')">Cancel</button>
+    </div>
+</div>
+
+<div id="modal-checkin-form" class="modal-overlay">
+    <div class="modal-card" style="text-align: left;">
+        <h3 style="text-align: center;">Update Status</h3>
+        <p style="text-align: center; font-size: 11px; margin-bottom: 20px; color: var(--text-muted);">Help the community & earn points!</p>
+        <div class="col mb-16"><label style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Crowd Level</label><div class="input-bars" id="crowd-input-bars"></div><div class="row" style="justify-content: space-between; font-size: 10px; color: var(--text-muted);"><span>Empty</span><span>Full</span></div></div>
+        <div class="col mb-16"><label style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">WiFi Speed</label><select class="select-glass" id="input-wifi"><option>Excellent</option><option>Good</option><option>Okay</option><option>Bad</option></select></div>
+        <div class="col mb-16"><label style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Drinks</label><select class="select-glass" id="input-drinks"><option>Excellent</option><option>Good</option><option>Okay</option><option>Bad</option></select></div>
+        <div class="col mb-16"><label style="font-size: 12px; color: var(--text-muted); margin-bottom: 6px;">Your Feedback (optional)</label><textarea id="checkin-feedback" class="input-glass" style="height: 60px;" placeholder="We appreciate your advice ❤"></textarea></div>
+        <div class="row" style="gap: 10px; margin-bottom: 20px;">
+            <label class="btn btn-glass" style="flex:1; font-size: 12px; cursor: pointer;">
+                <i class="ph ph-camera"></i> Picture upload
+                <input type="file" id="checkin-file-input" accept="image/*" style="display: none;">
+            </label>
+        </div>
+        <button class="btn btn-primary" style="width:100%;" onclick="submitCheckInForm()">Submit Update</button>
+        <button class="btn btn-glass" style="width:100%; margin-top:8px;" onclick="closeModal('modal-checkin-form')">Cancel</button>
+    </div>
+</div>
+
+<div id="modal-xp" class="modal-overlay">
+    <div class="modal-card" style="background: transparent; box-shadow: none; border: none; backdrop-filter: none;">
+        <h1 style="font-size: 40px; color: var(--accent-cyan); text-shadow: 0 0 20px var(--accent-cyan);">+50 XP</h1>
+        <p style="color: var(--text-muted); font-size: 12px; margin-top: 5px;">Thanks for updating!</p>
+    </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+    <div class="lightbox-close" onclick="closeLightbox()"><i class="ph-bold ph-x"></i></div>
+    <img class="lightbox-img" id="lightbox-image" src="" onclick="event.stopPropagation()">
+</div>
+</div>
+<script>
+   
+const cafes = [
+// ---------- 1 ----------
+{
+id: 1,
+title: "Cafe Hoa",
+images: ["ASSETS/caphehoa1.png", "ASSETS/caphehoa2.png", "ASSETS/caphehoa3.png", "ASSETS/caphehoa5.png" ],
+communityContributions: [
+    { user: "Nhi", comment: "Quiet spot, great for reading.", photo: null, time: "10 min ago" },
+    { user: "Thư", comment: "Love the decor here!", photo: "ASSETS/caphehoa4.png", time: "2 hours ago" }
+],
+openTime: "09:00", closeTime: "22:00",
+map: "https://maps.app.goo.gl/k9PYi9iRDTXvPnLG7",
+address: "414/17 Cách Mạng Tháng Tám, Q.3",
+hotline: "0868324845",
+note: "The air-conditioning is a bit too cold, though the spot is a hidden gem and not widely known.",
+isFavorite: false,
+lat: 10.784050357081421, lng: 106.67120834061035, 
+
+aiCrowdScore: 15,
+    finalCrowdScore: 18,
+    wifi: "Excellent",
+    drinks: "Okay",
+    service: "Good",
+    price: "$$",
+    crowdDataset: {
+        "Mon": [5, 10, 15, 12, 8, 5],
+        "Tue": [5, 12, 18, 15, 10, 5],
+        "Wed": [8, 15, 20, 18, 12, 6],
+        "Thu": [8, 15, 22, 18, 10, 8],
+        "Fri": [10, 20, 25, 22, 15, 10],
+        "Sat": [15, 25, 30, 25, 20, 12],
+        "Sun": [15, 28, 35, 28, 18, 10]
+    }
+},
+
+// ---------- 2 ----------
+{ 
+    id: 2,
+    title: "Day In Cafe & Brunch",
+    images: ["ASSETS/dayincafe1.png", "ASSETS/dayincafe2.png", "ASSETS/dayincafe3.png"], 
+    communityContributions: [{ user: "Chianti", comment: "Perfect background noise level for deep work.", photo: "ASSETS/dayincafe7.png", time: "20 min ago" }], 
+    openTime: "07:00", closeTime: "22:00",
+    map: "https://maps.app.goo.gl/1Dg9MmPkKxCgYKCt5",
+    address: "Tôn Dật Tiên, Khu đô thị Phú Mỹ Hưng, Q.7",
+    hotline: "0904108896",
+    note: "They do matcha really well here; it's what they're known for. Usually not crowded at all!",
+    isFavorite: false,
+    lat: 10.723057953057431, lng: 106.71576422944784, 
+ 
+    aiCrowdScore: 25,
+    finalCrowdScore: 23,
+    wifi: "Excellent",
+    drinks: "Excellent",
+    service: "Good",
+    price: "$$",
+    crowdDataset: {
+        "Mon": [10, 20, 25, 20, 15, 5],
+        "Tue": [10, 22, 28, 22, 18, 8],
+        "Wed": [12, 25, 30, 25, 20, 10],
+        "Thu": [12, 25, 32, 28, 20, 10],
+        "Fri": [15, 30, 40, 35, 25, 15],
+        "Sat": [20, 45, 50, 40, 30, 20],
+        "Sun": [25, 50, 55, 45, 35, 20]
+    }
+},
+
+// ---------- 3 ----------
+{ 
+    id: 3,
+    title: "OKKIO Cafe – Duy Tân",
+    images: ["ASSETS/ok1.png", "ASSETS/ok2.png", "ASSETS/ok3.png", "ASSETS/ok4.png", "ASSETS/ok7.png"],
+    communityContributions: [{ user: "Hủ", comment: "Love the outdoor seating area.", photo: "ASSETS/ok6.png", time: "15 min ago" }],
+    openTime: "07:30", closeTime: "22:00",
+    map: "https://maps.app.goo.gl/1KXZT6mUB9svuSnu5",
+    address: "41/1 Phạm Ngọc Thạch, P.6, Q.3",
+    hotline: "0899188286",
+    note: "It's a little pricey, but totally worth it for studying and having a nice drink.",
+    isFavorite: false,
+    lat: 10.784553710961607, lng: 106.69324798834312,  
+
+    aiCrowdScore: 65,
+    finalCrowdScore: 68,
+    wifi: "Excellent",
+    drinks: "Excellent",
+    service: "Excellent",
+    price: "$$$",
+    crowdDataset: {
+        "Mon": [30, 50, 60, 55, 40, 20],
+        "Tue": [35, 55, 65, 58, 45, 25],
+        "Wed": [35, 60, 70, 60, 50, 30],
+        "Thu": [40, 65, 75, 65, 55, 35],
+        "Fri": [45, 75, 85, 80, 70, 50],
+        "Sat": [50, 85, 95, 90, 80, 60],
+        "Sun": [55, 90, 92, 85, 75, 55]
+    }
+},
+
+// ---------- 4 ----------
+{ 
+    id: 4,
+    title: "Little HaNoi Egg Coffee",
+    images: ["ASSETS/li1.png", "ASSETS/li2.png", "ASSETS/li3.png", "ASSETS/li4.png", "ASSETS/li5.png"],
+    communityContributions: [{ user: "Đông", comment: "The egg coffee custard is incredibly rich and creamy, perfect for dipping the crispy toast. A must-try!", photo: "ASSETS/li6.png", time: "35 min ago" }],
+    openTime: "07:00", closeTime: "21:30",
+    map: "https://maps.app.goo.gl/zUzuYqJYPWwJqBCz7",
+    address: "167 Ký Con, P.Nguyễn Thái Bình, Q.1",
+    hotline: "0904522339",
+    note: "It's a little pricey, but totally worth it for studying and having a nice drink.",
+    isFavorite: false,
+    lat: 10.768431280397227, lng: 106.69722337597861, 
+
+    aiCrowdScore: 55,
+    finalCrowdScore: 53,
+    wifi: "Good",
+    drinks: "Excellent",
+    service: "Excellent",
+    price: "$$$",
+    crowdDataset: {
+        "Mon": [20, 40, 50, 45, 35, 15],
+        "Tue": [25, 45, 55, 48, 38, 18],
+        "Wed": [25, 50, 60, 50, 40, 20],
+        "Thu": [30, 55, 65, 55, 45, 25],
+        "Fri": [35, 65, 75, 70, 60, 40],
+        "Sat": [40, 80, 85, 80, 70, 50],
+        "Sun": [45, 85, 88, 80, 65, 45]
+    }
+},
+
+// ---------- 5 ----------
+{ 
+    id: 5,
+    title: "Chốn Riêng (Quận 10)",
+    images: ["ASSETS/chonrieng1.png", "ASSETS/chonrieng2.png", "ASSETS/chonrieng6.png", "ASSETS/chonrieng7.png"],
+    communityContributions: [
+        { user: "Tần", comment: "Perfect background noise level for deep work.", photo: "ASSETS/chonrieng5.png", time: "5 min ago" }
+    ],
+    openTime: "00:00",
+    closeTime: "23:59",
+    map: "https://maps.app.goo.gl/dxBEKBpodEeTGg4z9",
+    address: "156/7e/9, Tô Hiến Thành, P.15, Q.10",
+    hotline: "0363456371",
+    note: "It’s very cheap since they only use instant beverages, but the study space is great. Only 25k per person for 4 hours.",
+    isFavorite: false,
+    lat: 10.781510041285694, lng: 106.6678081177877, 
+
+    aiCrowdScore: 78,
+    finalCrowdScore: 79,
+    wifi: "Excellent",
+    drinks: "Okay",
+    service: "Good",
+    price: "$",
+
+    crowdDataset: {
+        "Mon": [40, 60, 85, 80, 60, 35],
+        "Tue": [35, 58, 80, 78, 55, 30],
+        "Wed": [38, 62, 88, 82, 60, 32],
+        "Thu": [40, 65, 90, 85, 65, 35],
+        "Fri": [45, 75, 95, 92, 80, 60],
+        "Sat": [55, 85, 98, 95, 88, 70],
+        "Sun": [50, 80, 90, 85, 70, 45]
+    }
+},
+
+
+// ---------- 6 ----------
+{ 
+    id: 6,
+    title: "BẢN Cà Phê (Quận 1)",
+    images: ["ASSETS/bancaphe1.png", "ASSETS/bancaphe2.png", "ASSETS/bancaphe5.png", "ASSETS/bancaphe8.png", "ASSETS/bancaphe9.png"],
+    communityContributions: [
+         { user: "Hy Tần", comment: "Quiet spot, great for reading.", photo: null, time: "10 min ago" },
+         { user: "Mai Trang", comment: "Love the decor here!", photo: "ASSETS/bancaphe3.png", time: "2 hours ago" }
+    ],
+    openTime: "08:00", closeTime: "22:00",
+    map: "https://maps.app.goo.gl/4yL8pkiYdN11V3eN8",
+    address: "38/7 Lê Lợi, Bến Nghé, Q.1",
+    hotline: "02866726936",
+    note: "A small, cozy, calm vibe, perfect for focusing on deadlines.",
+    isFavorite: false,
+    lat: 10.774096569854493, lng: 106.70032729999916, 
+
+    aiCrowdScore: 35,
+    finalCrowdScore: 29,
+    wifi: "Excellent",
+    drinks: "Good",
+    service: "Good",
+    price: "$$",
+    crowdDataset: {
+        "Mon": [15, 25, 35, 30, 20, 10],
+        "Tue": [15, 30, 38, 32, 22, 12],
+        "Wed": [20, 35, 40, 35, 25, 15],
+        "Thu": [20, 38, 45, 38, 28, 18],
+        "Fri": [25, 45, 55, 50, 40, 25],
+        "Sat": [30, 55, 65, 60, 45, 30],
+        "Sun": [35, 60, 68, 55, 40, 25]
+    }
+},
+
+// ---------- 7 ----------
+{ 
+    id: 7,
+    title: "Unihub Coffee (Quận 3)",
+    images: ["ASSETS/uni1.png", "ASSETS/uni2.png", "ASSETS/uni3.png", "ASSETS/uni5.png", "ASSETS/uni4.png"],
+    communityContributions: [{ user: "Jade", comment: "The Matcha Latte is a must-try.", photo: "ASSETS/uni6.png", time: "5 min ago" }],
+    openTime: "07:00", closeTime: "22:00",
+    map: "https://maps.app.goo.gl/Yhn45UrKtD9iw66X9",
+    address: "130 Nguyễn Thị Minh Khai, P.Võ Thị Sáu, Q.3",
+    hotline: "0343090763",
+    note: "They also serve main dishes like bò kho and rice, great for long hours of study.",
+    isFavorite: false,
+    lat: 10.777333785265673, lng: 106.69266756810208, 
+
+    aiCrowdScore: 68,
+    finalCrowdScore: 61,
+    wifi: "Excellent",
+    drinks: "Excellent",
+    service: "Good",
+    price: "$$",
+    crowdDataset: {
+        "Mon": [30, 70, 60, 55, 65, 30],
+        "Tue": [35, 75, 65, 60, 70, 35],
+        "Wed": [35, 78, 68, 65, 72, 40],
+        "Thu": [40, 80, 70, 68, 75, 45],
+        "Fri": [45, 85, 75, 75, 85, 55],
+        "Sat": [50, 90, 80, 80, 90, 60],
+        "Sun": [55, 85, 85, 75, 80, 50]
+    }
+},
+
+// ---------- 8 ----------
+{ 
+    id: 8,
+    title: "ISPACE Coffee & Time",
+    images: ["ASSETS/i1.png", "ASSETS/i2.png", "ASSETS/i3.png", "ASSETS/i4.png", "ASSETS/i5.png"],
+    communityContributions: [{ user: "Huy", comment: "Fast Wifi and plenty of power outlets. A lifesaver!", photo: "ASSETS/i6.png", time: "45 min ago" }],
+    openTime: "06:30", closeTime: "04:00",
+    map: "https://maps.app.goo.gl/TWhbxcsvCGNGzBJK8",
+    address: "204 Đường số 20, P.5, Gò Vấp",
+    hotline: "0969273881",
+    note: "This place has both meeting rooms and nap rooms, and the stir-fried noodles are surprisingly tasty.",
+    isFavorite: false,
+    lat: 10.8366327882386, lng: 106.68945529527393,
+
+    aiCrowdScore: 50,
+    finalCrowdScore: 50,
+    wifi: "Excellent",
+    drinks: "Okay",
+    service: "Good",
+    price: "$",
+    crowdDataset: {
+        "Mon": [25, 45, 55, 50, 40, 45],
+        "Tue": [25, 50, 60, 55, 45, 50],
+        "Wed": [30, 55, 65, 60, 50, 55],
+        "Thu": [30, 60, 70, 65, 55, 60],
+        "Fri": [35, 65, 75, 70, 65, 70],
+        "Sat": [40, 70, 80, 75, 70, 75],
+        "Sun": [40, 75, 85, 70, 60, 65]
+    }
+},
+
+// ---------- 9 ----------
+{ 
+    id: 9,
+    title: "Lelaz Coffee – Tea House",
+    images: ["ASSETS/le1.png", "ASSETS/le2.png", "ASSETS/le3.png" ],
+    communityContributions: [
+        { user: "Minh Thư", comment: "Good value for money.", photo: "ASSETS/le5.png", time: "15 min ago" },
+        { user: "Uni", comment: "Friendly service, will definitely come back.", photo: "ASSETS/le7.png", time: "2 hours ago" }
+    ],
+    openTime: "08:00", closeTime: "22:00",
+    map: "https://maps.app.goo.gl/5fhGc4mtEgtywKfUA",
+    address: "93b Đ. Hậu Giang, P.5, Q.6",
+    hotline: "0333951584",
+    note: "Study-friendly vibe with no notable decorations. Large tables, comfortable for working.",
+    isFavorite: false,
+    lat: 10.749466298507212, lng: 106.64685878034399, 
+
+    aiCrowdScore: 58,
+    finalCrowdScore: 55,
+    wifi: "Excellent",
+    drinks: "Bad",
+    service: "Good",
+    price: "$$",
+    crowdDataset: {
+        "Mon": [20, 50, 65, 55, 40, 20],
+        "Tue": [25, 55, 70, 60, 45, 25],
+        "Wed": [25, 60, 72, 65, 50, 30],
+        "Thu": [30, 65, 75, 70, 55, 35],
+        "Fri": [35, 70, 80, 75, 65, 45],
+        "Sat": [40, 80, 85, 80, 70, 50],
+        "Sun": [45, 85, 88, 75, 60, 40]
+    }
+},
+
+// ---------- 10 ----------
+{ 
+    id: 10,
+    title: "Hay Là Cafe",
+    images: ["ASSETS/hay1.png", "ASSETS/hay2.png", "ASSETS/hay3.png", "ASSETS/hay4.png", "ASSETS/hay7.png"],
+    communityContributions: [
+        { user: "Soya", comment: "Good value for money.", photo: "ASSETS/hay5.png", time: "15 min ago" },
+        { user: "NaBbi", comment: "They have an adorable resident cat here! 🐈", photo: "ASSETS/hay8.png", time: "20 min ago" },
+        { user: "Tbn", comment: "The signature foam drinks are amazing! Loved the one with crushed nuts on top, so creamy and nutty.", photo: "ASSETS/hay6.png", time: "45 min ago" },
+
+    ],
+    openTime: "08:00", closeTime: "22:00",
+    map: "https://maps.app.goo.gl/rLNfdi3waB6qc8Zu5",
+    address: "497/11 Sư Vạn Hạnh, P.12, Q.10",
+    hotline: "0931149507",
+    note: "Small but cozy, simple, and pleasantly comfortable.",
+    isFavorite: false,
+    lat: 10.773923352393405, lng: 106.66791712944699, 
+
+    aiCrowdScore: 42,
+    finalCrowdScore: 45,
+    wifi: "Good",
+    drinks: "Excellent",
+    service: "Good",
+    price: "$$",
+    crowdDataset: {
+        "Mon": [15, 35, 45, 40, 30, 15],
+        "Tue": [18, 40, 50, 42, 35, 18],
+        "Wed": [20, 45, 55, 45, 38, 20],
+        "Thu": [22, 48, 58, 48, 40, 22],
+        "Fri": [25, 55, 65, 60, 50, 30],
+        "Sat": [30, 70, 75, 65, 55, 40],
+        "Sun": [35, 75, 80, 60, 45, 30]
+    }
+},
+
+// ---------- 11 ----------
+{ 
+    id: 11,
+    title: "Thành Coffee",
+    images: ["ASSETS/thanh1.png", "ASSETS/thanh2.png", "ASSETS/thanh3.png", "ASSETS/thanh4.png", "ASSETS/thanh5.png" ],
+    communityContributions: [
+        { user: "AndZ", comment: "Good flavor, though slightly too sweet for me.", photo: "ASSETS/thanh6.png", time: "10 min ago" },
+    ],
+    openTime: "07:00", closeTime: "00:00",
+    map: "https://maps.app.goo.gl/WTvFcq3SuK8aECy48",
+    address: "1 Đ. Nhiêu Tứ, P.7, Phú Nhuận",
+    hotline: "0396803459",
+    note: "Lovely, super quiet space with cute decorations. Great for working and taking photos.",
+    isFavorite: false,
+    lat: 10.801994723989024, lng: 106.68934655583686, 
+
+    aiCrowdScore: 28,
+    finalCrowdScore: 25,
+    wifi: "Excellent",
+    drinks: "Okay",
+    service: "Good",
+    price: "$$",
+    crowdDataset: {
+        "Mon": [10, 20, 30, 25, 15, 10],
+        "Tue": [12, 25, 35, 28, 18, 12],
+        "Wed": [15, 28, 38, 30, 20, 15],
+        "Thu": [15, 30, 40, 35, 22, 18],
+        "Fri": [20, 40, 50, 45, 35, 25],
+        "Sat": [25, 55, 60, 50, 40, 30],
+        "Sun": [30, 60, 65, 45, 35, 20]
+    }
+},
+
+// ---------- 12 ----------
+{ 
+    id: 12,
+    title: "Cà Rề Cafe",
+    images: ["ASSETS/carecafe1.png", "ASSETS/carecafe2.png", "ASSETS/carecafe3.png", "ASSETS/carecafe4.png", "ASSETS/carecafe5.png", "ASSETS/carecafe6.png"],
+    communityContributions: [
+        { user: "Kim Ngân", comment: "Quiet spot, great for studying.", photo: "ASSETS/carecafe7.png", time: "15 min ago" }
+    ],
+    openTime: "08:00", closeTime: "22:00",
+    map: "https://maps.app.goo.gl/z8YxiDzkYfGhk2hWA",
+    address: "Chung cư, 35 Nguyễn Văn Tráng, P.Phạm Ngũ Lão, Q.1",
+    hotline: "0886161380",
+    note: "The matcha here is outstanding, though it can get crowded during peak hours.",
+    isFavorite: false,
+    lat: 10.770666352435487, lng: 106.69170010000053, 
+
+    aiCrowdScore: 85,
+    finalCrowdScore: 83,
+    wifi: "Excellent",
+    drinks: "Excellent",
+    service: "Excellent",
+    price: "$$",
+    crowdDataset: {
+        "Mon": [40, 70, 80, 75, 60, 30],
+        "Tue": [45, 75, 85, 78, 65, 35],
+        "Wed": [45, 78, 88, 80, 70, 40],
+        "Thu": [50, 80, 90, 85, 75, 45],
+        "Fri": [55, 85, 95, 90, 85, 60],
+        "Sat": [60, 95, 100, 95, 90, 70],
+        "Sun": [65, 98, 95, 90, 80, 50]
+    }
+},
+
+// ---------- 13 ----------
+{ 
+    id: 13,
+    title: "Tách Tách Cafe",
+    images: ["ASSETS/ta1.png", "ASSETS/ta2.png", "ASSETS/ta3.png", "ASSETS/ta4.png", "ASSETS/ta5.png", "ASSETS/ta6.png", "ASSETS/ta7.png"],
+    communityContributions: [{ user: "Jack", comment: "Nice place.", photo: null, time: "55 min ago" }],
+    openTime: "08:00", closeTime: "22:00",
+    map: "https://maps.app.goo.gl/jcijp9bEn7umRo7W6",
+    address: "Chung cư, 35 Nguyễn Văn Tráng, P.Phạm Ngũ Lão, Q.1",
+    hotline: "0817592627",
+    note: "The music playlist is soothing and perfect for work. Gentle essential-oil scent.",
+    isFavorite: false,
+    lat: 10.770678209740407, lng: 106.69171954601433, 
+
+    aiCrowdScore: 45,
+    finalCrowdScore: 47,
+    wifi: "Good",
+    drinks: "Good",
+    service: "Excellent",
+    price: "$$",
+    crowdDataset: {
+        "Mon": [20, 40, 50, 45, 30, 15],
+        "Tue": [20, 45, 55, 48, 35, 18],
+        "Wed": [25, 48, 58, 50, 38, 20],
+        "Thu": [25, 50, 60, 55, 40, 22],
+        "Fri": [30, 60, 70, 65, 50, 30],
+        "Sat": [35, 70, 80, 70, 60, 40],
+        "Sun": [40, 75, 85, 65, 50, 30]
+    }
+},
+
+// ---------- 14 ----------
+{ 
+    id: 14,
+    title: "THE WISELANDS Coffee",
+    images: ["ASSETS/the1.png", "ASSETS/the2.png", "ASSETS/the3.png", "ASSETS/the4.png", "ASSETS/the5.png", "ASSETS/the6.png"],
+    communityContributions: [{ user: "Nhạn", comment: "Beautiful view from the balcony.", photo: null, time: "25 min ago" }],
+    openTime: "07:00", closeTime: "23:00",
+    map: "https://maps.app.goo.gl/1Hiue5NiwXwtQaXW8",
+    address: "216 Điện Biên Phủ, P.Võ Thị Sáu, Q.3",
+    hotline: "0334626989",
+    note: "Super spacious; great for deadlines or group discussions.",
+    isFavorite: false,
+    lat: 10.782997412878819, lng: 106.68985385337301, 
+
+    aiCrowdScore: 62,
+    finalCrowdScore: 57,
+    wifi: "Excellent",
+    drinks: "Excellent",
+    service: "Good",
+    price: "$$$",
+    crowdDataset: {
+        "Mon": [25, 55, 65, 60, 40, 20],
+        "Tue": [30, 60, 70, 65, 45, 25],
+        "Wed": [30, 65, 72, 68, 50, 30],
+        "Thu": [35, 68, 75, 70, 55, 35],
+        "Fri": [40, 75, 85, 80, 65, 45],
+        "Sat": [45, 85, 90, 85, 75, 50],
+        "Sun": [50, 80, 85, 75, 60, 40]
+    }
+},
+
+// ---------- 15 ----------
+{ 
+    id: 15,
+    title: "The Workstation Coffee",
+    images: ["ASSETS/thew1.png", "ASSETS/thew2.png", "ASSETS/thew3.png", "ASSETS/thew4.png", "ASSETS/thew5.png", "ASSETS/thew6.png"],
+    communityContributions: [{ user: "Alma", comment: "Great music playlist, very chill.", photo: "ASSETS/thew7.png", time: "35 min ago" }],
+    openTime: "07:00", closeTime: "00:00",
+    map: "https://maps.app.goo.gl/JPLbkPxqzyPEwGHG6",
+    address: "449 Điện Biên Phủ, P.25, Bình Thạnh",
+    hotline: "0909586449",
+    note: "Enjoy 30% off the second drink after 3 hours. Up to 4–5 floors.",
+    isFavorite: false,
+    lat: 10.801718703145836, lng: 106.71352921057823, 
+
+    aiCrowdScore: 75,
+    finalCrowdScore: 65,
+    wifi: "Excellent",
+    drinks: "Good",
+    service: "Excellent",
+    price: "$$",
+    crowdDataset: {
+        "Mon": [30, 65, 80, 70, 50, 25],
+        "Tue": [35, 70, 85, 75, 55, 30],
+        "Wed": [35, 75, 88, 78, 60, 35],
+        "Thu": [40, 78, 90, 80, 65, 40],
+        "Fri": [45, 85, 95, 90, 75, 50],
+        "Sat": [50, 90, 98, 92, 80, 60],
+        "Sun": [55, 85, 90, 80, 70, 40]
+    }
+},
+
+// ---------- 16 ----------
+{ 
+    id: 16,
+    title: "Ellie – Quán cà phê lỗi thời",
+    images: ["ASSETS/ellie1.png", "ASSETS/ellie2.png", "ASSETS/ellie3.png", "ASSETS/ellie4.png", "ASSETS/ellie5.png", "ASSETS/ellie6.png"],
+    communityContributions: [{ user: "Tom", comment: "Such a cozy hidden gem.", photo: "ASSETS/ellie7.png", time: "1 hour ago" }],
+    openTime: "08:30", closeTime: "21:30",
+    map: "https://maps.app.goo.gl/WTzupihtfdAgPhxv6",
+    address: "14 Đặng Dung, P.Tân Định, Q.1",
+    hotline: "None",
+    note: "The place gets crowded quickly, and they offer 20% off the second beverage.",
+    isFavorite: false,
+    lat: 10.792824374511953, lng: 106.69108688773167, 
+
+    aiCrowdScore: 88,
+    finalCrowdScore: 85,
+    wifi: "Excellent",
+    drinks: "Excellent",
+    service: "Excellent",
+    price: "$$",
+    crowdDataset: {
+        "Mon": [45, 75, 85, 80, 60, 30],
+        "Tue": [45, 80, 90, 85, 65, 35],
+        "Wed": [50, 82, 92, 88, 70, 40],
+        "Thu": [55, 85, 95, 90, 75, 45],
+        "Fri": [60, 90, 98, 95, 85, 60],
+        "Sat": [65, 95, 100, 98, 90, 70],
+        "Sun": [70, 100, 95, 90, 80, 50]
+    }
+},
+
+// ---------- 17 ----------
+{ 
+    id: 17,
+    title: "Stomy's Coffee",
+    images: ["ASSETS/st1.png", "ASSETS/st2.png", "ASSETS/st3.png", "ASSETS/st4.png", "ASSETS/st5.png", "ASSETS/st6.png", "ASSETS/st7.png", "ASSETS/st8.png"],
+    communityContributions: [{ user: "Nolan", comment: "Super cute interior, feels like home.", photo: null, time: "15 min ago" }],
+    openTime: "08:30", closeTime: "21:30",
+    map: "https://maps.app.goo.gl/LywWmxMdCrcyUiWs5",
+    address: "167/4 Ngô Tất Tố, P.22, Bình Thạnh",
+    hotline: "0379540507",
+    note: "The café is a bit small.",
+    isFavorite: false,
+    lat: 10.791359757266516, lng: 106.71501275596258, 
+
+    aiCrowdScore: 52,
+    finalCrowdScore: 51,
+    wifi: "Excellent",
+    drinks: "Good",
+    service: "Good",
+    price: "$$",
+    crowdDataset: {
+        "Mon": [20, 45, 55, 50, 35, 15],
+        "Tue": [20, 50, 60, 55, 40, 20],
+        "Wed": [25, 55, 65, 58, 45, 25],
+        "Thu": [25, 58, 68, 60, 50, 30],
+        "Fri": [30, 65, 75, 70, 60, 40],
+        "Sat": [35, 75, 85, 80, 70, 50],
+        "Sun": [40, 80, 80, 70, 55, 35]
+    }
+},
+
+// ---------- 18 ----------
+{ 
+    id: 18,
+    title: "Coffee Hut",
+    images: ["ASSETS/coffeehut1.png", "ASSETS/coffeehut2.png", "ASSETS/coffeehut3.png", "ASSETS/coffeehut4.png", "ASSETS/coffeehut6.png", "ASSETS/coffeehut7.png"],
+    communityContributions: [{ user: "Clem", comment: "Thanks huhuhu", photo: "ASSETS/coffeehut8.png", time: "5 min ago" }],
+    openTime: "08:00", closeTime: "21:00",
+    map: "https://maps.app.goo.gl/VkcVZyjubtQNpRdm9",
+    address: "5 Đ. Trương Quyền, P.6, Q.3",
+    hotline: "02822002366",
+    note: "Cheaper compared to most places.",
+    isFavorite: false,
+    lat: 10.786419317410443, lng: 106.69280738834323, 
+
+    aiCrowdScore: 65,
+    finalCrowdScore: 59,
+    wifi: "Excellent",
+    drinks: "Okay",
+    service: "Good",
+    price: "$",
+    crowdDataset: {
+        "Mon": [30, 55, 70, 60, 40, 20],
+        "Tue": [35, 60, 75, 65, 45, 25],
+        "Wed": [35, 65, 78, 68, 50, 30],
+        "Thu": [40, 70, 80, 70, 55, 35],
+        "Fri": [45, 80, 90, 85, 70, 50],
+        "Sat": [50, 90, 95, 90, 80, 60],
+        "Sun": [55, 95, 90, 80, 65, 40]
+    }
+},
+
+// ---------- 19 ----------
+{ 
+    id: 19,
+    title: "Glas Srca Coffee",
+    images: ["ASSETS/glas1.png", "ASSETS/glas2.png", "ASSETS/glas3.png", "ASSETS/glas4.png", "ASSETS/glas5.png", "ASSETS/glas6.png", "ASSETS/glas7.png", "ASSETS/glas8.png"],
+    communityContributions: [{ user: "Alma", comment: "Super cute interior, feels like home.", photo: null, time: "10 min ago" }],
+    openTime: "06:00", closeTime: "22:00",
+    map: "https://maps.app.goo.gl/MWcXkkhnfRZV7Bke7",
+    address: "681/9b Đ. Hậu Giang, P.11, Q.6",
+    hotline: "0368141916",
+    note: "Cozy indie vibes with a warm, comfortable atmosphere and chill background music.",
+    isFavorite: false,
+    lat: 10.74701375879124, lng: 106.63345167055192,
+
+    aiCrowdScore: 32,
+    finalCrowdScore: 27,
+    wifi: "Excellent",
+    drinks: "Good",
+    service: "Good",
+    price: "$$",
+    crowdDataset: {
+        "Mon": [10, 25, 35, 30, 20, 10],
+        "Tue": [12, 28, 40, 35, 25, 12],
+        "Wed": [15, 30, 42, 38, 28, 15],
+        "Thu": [15, 35, 45, 40, 30, 18],
+        "Fri": [20, 45, 55, 50, 40, 25],
+        "Sat": [25, 55, 65, 60, 50, 30],
+        "Sun": [30, 60, 65, 55, 40, 20]
+    }
+},
+
+// ---------- 20 ----------
+{ 
+    id: 20,
+    title: "Keng Cafe",
+    images: ["ASSETS/keng1.png", "ASSETS/keng3.png", "ASSETS/keng2.png", "ASSETS/keng4.png", "ASSETS/keng5.png", "ASSETS/keng6.png", "ASSETS/keng7.png"],
+    communityContributions: [{ user: "Bảo Trân", comment: "Beautiful view.", photo: null, time: "10 min ago" }],
+    openTime: "08:00", closeTime: "23:00",
+    map: "https://maps.app.goo.gl/LPjsYPgAo2oJVHkm6",
+    address: "136/8 Đ. Vạn Kiếp, P.1, Bình Thạnh",
+    hotline: "0345557659",
+    note: "Spacious and airy with a comfortable open feel.",
+    isFavorite: false,
+    lat: 10.799744994134114, lng: 106.69312932320273, 
+
+    aiCrowdScore: 48,
+    finalCrowdScore: 49,
+    wifi: "Good",
+    drinks: "Good",
+    service: "Good",
+    price: "$$",
+    crowdDataset: {
+        "Mon": [20, 40, 50, 45, 30, 15],
+        "Tue": [22, 45, 55, 50, 35, 18],
+        "Wed": [25, 50, 60, 55, 40, 20],
+        "Thu": [25, 55, 65, 58, 45, 25],
+        "Fri": [30, 65, 75, 70, 55, 35],
+        "Sat": [40, 75, 85, 80, 65, 45],
+        "Sun": [45, 80, 80, 70, 55, 30]
+    }
+}
+];
+
+let currentUser = null;
+let selectedCafe = null;
+let compareCafeId = null;
+
+/* --- ACHIEVEMENTS DATA --- */
+const achievements = [
+    {
+        name: "First Check-In",
+        description: "Completed your first check-in!",
+        icon: "ph-fill ph-map-pin",
+        unlocked: true
+    },
+    {
+        name: "Photo Contributor",
+        description: "Uploaded a photo to a café.",
+        icon: "ph-fill ph-camera",
+        unlocked: false
+    },
+    {
+        name: "Cafe Explorer",
+        description: "Visited 5 different cafés.",
+        icon: "ph-fill ph-compass",
+        unlocked: false
+    },
+    {
+        name: "Regular Member",
+        description: "Logged in 7 days in a row.",
+        icon: "ph-fill ph-calendar-check",
+        unlocked: false
+    },
+    {
+        name: "Aesthetic Photographer",
+        description: "Uploaded 10 high-quality photos.",
+        icon: "ph-fill ph-image",
+        unlocked: false
+    },
+];
+
+    // FEATURE 2: Geolocation Logic
+    let userLocation = null;
+
+    navigator.geolocation.getCurrentPosition(pos => {
+        userLocation = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude
+        };
+        renderList();
+    });
+
+    if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) {
+        document.querySelectorAll(".dynamic-island, .phone-notch, .notch")
+                .forEach(el => el.remove());
+        // Fallback: Remove purely decorative frame elements if on mobile (existing logic preserved)
+        document.querySelectorAll(".orb").forEach(e => e.remove());
+    }
+
+    function getDistance(lat1, lon1, lat2, lon2) {
+        function toRad(v) { return v * Math.PI / 180; }
+        var R = 6371;
+        var dLat = toRad(lat2 - lat1);
+        var dLon = toRad(lon2 - lon1);
+        var a = Math.sin(dLat/2)**2 +
+                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                Math.sin(dLon/2)**2;
+        var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return (R * c).toFixed(1);
+    }
+
+    // FEATURE 1: Crowd Icons
+    function getCrowdIcons(score) {
+        let count, color;
+        if (score < 30) { 
+            count = 1; 
+            color = '#8EE5C2'; // Quiet
+        } else if (score < 60) { 
+            count = 2; 
+            color = '#F5DE8B'; // Moderate
+        } else if (score < 80) { 
+            count = 3; 
+            color = '#F2A65A'; // Busy
+        } else { 
+            count = 4; 
+            color = '#E1645A'; // Full
+        }
+
+        let iconsHtml = '';
+        for (let i = 0; i < count; i++) {
+            iconsHtml += `<i class="ph-fill ph-user" style="color: ${color}; font-size: 14px; margin-right: 2px;"></i>`;
+        }
+        return iconsHtml;
+    }
+
+    /* --- NAVIGATION --- */
+    function navTo(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+        
+        document.querySelectorAll('.nav-icon').forEach(i => i.classList.remove('active'));
+        const map = {'screen-home':0, 'screen-saved':1, 'screen-account':2, 'screen-activity':3, 'screen-settings':4};
+        if(map[screenId]!==undefined) document.querySelectorAll('.nav-icon')[map[screenId]].classList.add('active');
+
+        if(screenId === 'screen-home') renderList();
+        if(screenId === 'screen-saved') renderSaved();
+        if(screenId === 'screen-account') renderAccount();
+    }
+
+    function toggleCat(el) { el.classList.toggle('active'); }
+    
+    function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        // Toggle UI updates if needed
+    }
+
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+
+    /* --- UTILS --- */
+    function getMetricColor(val) { if(val==='Excellent') return 'var(--color-blue)'; if(val==='Good') return 'var(--color-green)'; if(val==='Okay') return 'var(--color-orange)'; return 'var(--color-red)'; }
+    function getPriceColor(val) { return val === '$' ? 'var(--color-blue)' : (val === '$$' ? 'var(--color-orange)' : 'var(--color-red)'); }
+    function getCrowdColor(val) { return val<25 ? 'var(--color-blue)' : (val<50 ? 'var(--color-green)' : (val<80 ? 'var(--color-orange)' : 'var(--color-red)')); }
+    
+    /* --- OPENING HOURS LOGIC --- */
+function getOpenStatus(open, close) {
+
+    // SPECIAL CASE → 24/7
+    if (open === "00:00" && close === "23:59") {
+        return {
+            isOpen: true,
+            text: "Open 24/7",
+            class: "status-open",
+            closeText: ""
+        };
+    }
+
+    const now = new Date();
+    const currentMins = now.getHours() * 60 + now.getMinutes();
+
+    const [oh, om] = open.split(':').map(Number);
+    const [ch, cm] = close.split(':').map(Number);
+
+    const startMins = oh * 60 + om;
+    let endMins = ch * 60 + cm;
+
+    // ⭐ FIX OVERNIGHT (closeTime is next day)
+    let isOvernight = false;
+    if (endMins <= startMins) {
+        endMins += 1440; 
+        isOvernight = true;
+    }
+
+    // Convert current time for overnight logic
+    let current = currentMins;
+    if (isOvernight && currentMins < startMins) {
+        current += 1440;
+    }
+
+    const isOpen = current >= startMins && current < endMins;
+
+    // Format close time
+    let closeHour = ch;
+    let suffix = 'AM';
+    if (closeHour >= 12) { suffix = 'PM'; if (closeHour > 12) closeHour -= 12; }
+    else if (closeHour === 0) { closeHour = 12; }
+
+    const closeText = `Closes ${closeHour} ${suffix}`;
+
+    return {
+        isOpen: isOpen,
+        text: isOpen ? "Open Now" : "Closed",
+        class: isOpen ? "status-open" : "status-closed",
+        closeText: closeText
+    };
+}
+
+function getCafeStatus(cafe) {
+    const now = new Date();
+    const [openH, openM] = cafe.openTime.split(":").map(Number);
+    const [closeH, closeM] = cafe.closeTime.split(":").map(Number);
+
+    const open = new Date(); open.setHours(openH, openM, 0);
+    const close = new Date(); close.setHours(closeH, closeM, 0);
+
+    // Simple overnight handling for the requested logic
+    if (close < open) close.setDate(close.getDate() + 1);
+    
+    return now >= open && now <= close ? "open" : "closed";
+}
+
+    /* --- LISTING --- */
+function renderList(filter = 'All') {
+    const container = document.getElementById('cafe-list-container'); 
+    container.innerHTML = '';
+
+    // Create a shallow copy to sort/filter without mutating original 'cafes' order
+    let data = [...cafes];
+
+    if(filter === 'Strong Connection') data = data.filter(c => c.wifi === 'Excellent');
+    if(filter === 'Reasonable Price') data = data.filter(c => c.price === '$');
+    if(filter === 'Good Drinks') data = data.filter(c => c.drinks === 'Good' || c.drinks === 'Excellent');
+    if(filter === 'Quiet') data = data.filter(c => c.finalCrowdScore < 30);
+    
+    // NEW: Sort by Distance (Nearest -> Farthest)
+    if(filter === 'Distance' && userLocation) {
+        data.sort((a, b) => {
+            const distA = getDistance(userLocation.lat, userLocation.lng, a.lat, a.lng);
+            const distB = getDistance(userLocation.lat, userLocation.lng, b.lat, b.lng);
+            return parseFloat(distA) - parseFloat(distB);
+        });
+    }
+
+    // ⭐ LIMIT FOR GUEST USERS — ONLY SHOW FIRST 10 CAFES
+    if (!currentUser) {
+        data = data.slice(0, 10);
+    }
+
+    data.forEach(c => {
+        if(!c.title) return;
+        
+        let distance = "";
+        if (userLocation && c.lat && c.lng) {
+            distance = getDistance(userLocation.lat, userLocation.lng, c.lat, c.lng) + " km";
+        }
+        
+        const img = c.images.length > 0 ? c.images[0] : '';
+        const status = getCafeStatus(c);
+        const isOpen = status === "open";
+        const badgeColor = isOpen ? 'var(--color-green)' : 'var(--color-red)';
+        const badgeText = isOpen ? 'Open now' : 'Closed';
+        
+        container.innerHTML += `
+            <div class="cafe-card" onclick="openDetail(${c.id})">
+                <img src="${img}" class="card-img">
+                <div class="card-info">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="card-title" style="font-weight: 700; font-size: 15px; color: var(--text-white);">${c.title}</span>
+                        <span style="padding: 3px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; background: rgba(255,255,255,0.8); color: ${badgeColor};">${badgeText}</span>
+                    </div>
+                    
+                    <div style="display:flex; align-items:center; margin-top:4px; height: 20px;">
+                        ${getCrowdIcons(c.finalCrowdScore)}
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; width:100%; align-items:center; margin-top:2px;">
+                        <span style="font-size:13px; color:${getPriceColor(c.price)}; font-weight:600;">${c.price}</span>
+                        <span style="font-size: 11px; color: var(--text-muted);">${distance}</span>
+                    </div>
+                </div>
+            </div>`;
+    });
+
+    if(container.innerHTML === "") {
+        container.innerHTML = "<p style='text-align:center; margin-top:20px; color:var(--text-muted);'>No cafes found.</p>";
+    }
+}
+
+    function filterList(type, el) { document.querySelectorAll('.chip').forEach(c => c.classList.remove('active')); el.classList.add('active'); renderList(type); }
+    function handleSearch(val) { renderList(); }
+
+    function renderSaved() {
+        const container = document.getElementById('saved-container');
+        const savedCafes = cafes.filter(c => c.isFavorite);
+        container.innerHTML = savedCafes.length ? '' : '<p style="text-align:center; margin-top:40px; color:var(--text-muted);">No saved spots yet.</p>';
+        savedCafes.forEach(c => { 
+             const img = c.images.length > 0 ? c.images[0] : '';
+             container.innerHTML += `<div class="cafe-card" onclick="openDetail(${c.id})"><img src="${img}" class="card-img"><div class="card-info"><span class="card-title" style="color:var(--text-white)">${c.title}</span><span style="font-size:12px; color:var(--text-muted);">Saved recently</span></div><i class="ph-fill ph-heart" style="color:var(--color-red);"></i></div>`; 
+        });
+    }
+
+    /* --- CAROUSEL LOGIC (PATCHED FOR MOBILE SWIPE) --- */
+    function setupImageCarousel(images) {
+        let index = 0;
+        let startX = 0;
+        let currentTranslate = 0;
+        let prevTranslate = 0;
+        let isDragging = false;
+
+        const root = document.getElementById('carousel-root');
+        const dotsContainer = document.getElementById('carousel-dots');
+        
+        // Render HTML
+        root.innerHTML = `<div class="carousel-track" id="track">
+            ${images.map(src => `<div class="carousel-slide"><img src="${src}" onclick="openLightbox('${src}')"></div>`).join('')}
+        </div>`;
+        dotsContainer.innerHTML = images.map((_, i) => `<div class="dot ${i===0?'active':''}"></div>`).join('');
+
+        const track = document.getElementById('track');
+        // Define imgBox as track to match requested variable name logic
+        const imgBox = track;
+
+        function updateImage() {
+            currentTranslate = index * -root.offsetWidth;
+            prevTranslate = currentTranslate;
+            track.style.transform = `translateX(${currentTranslate}px)`;
+            
+            Array.from(dotsContainer.children).forEach((dot, i) => {
+                dot.classList.toggle("active", i === index);
+            });
+        }
+
+        // Virtual buttons logic to support the requested patch structure
+        const nextBtn = { click: () => { if(index < images.length - 1) index++; updateImage(); } };
+        const prevBtn = { click: () => { if(index > 0) index--; updateImage(); } };
+
+        // 1. TouchStart (Patched with passive: true)
+        imgBox.addEventListener("touchstart", e => {
+            isDragging = true; 
+            startX = e.touches[0].clientX;
+            track.style.transition = 'none';
+        }, { passive: true });
+
+        // 2. TouchMove (Preserved for UI sliding animation, added passive for performance)
+        imgBox.addEventListener('touchmove', e => {
+            if (!isDragging) return;
+            const currentX = e.touches[0].clientX;
+            const diff = currentX - startX;
+            track.style.transform = `translateX(${prevTranslate + diff}px)`;
+        }, { passive: true });
+
+        // 3. TouchEnd (Patched with passive: true and requested threshold logic)
+        imgBox.addEventListener("touchend", e => {
+            isDragging = false;
+            let endX = e.changedTouches[0].clientX;
+            
+            track.style.transition = 'transform 0.3s ease-out';
+            
+            if (endX < startX - 40) nextBtn.click();
+            else if (endX > startX + 40) prevBtn.click();
+            else updateImage(); // Snap back if swipe wasn't strong enough
+        }, { passive: true });
+
+        // Initialize state
+        setTimeout(updateImage, 50);
+    }
+
+    /* --- GALLERY & CONTRIBUTIONS --- */
+    function renderCommunitySection() {
+        const galleryContainer = document.getElementById('community-gallery');
+        galleryContainer.innerHTML = '';
+        const photos = selectedCafe.communityContributions.filter(c => c.photo);
+        photos.forEach(c => {
+             galleryContainer.innerHTML += `<img src="${c.photo}" class="gallery-item" onclick="openLightbox('${c.photo}')">`;
+        });
+
+        const timelineContainer = document.getElementById('community-timeline');
+        timelineContainer.innerHTML = '';
+        
+        selectedCafe.communityContributions.forEach(c => {
+            let imgHTML = c.photo ? `<img src="${c.photo}" class="contribution-img" onclick="openLightbox('${c.photo}')">` : '';
+            timelineContainer.innerHTML += `
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="comment-box">
+                        <b style="color:var(--accent-cyan)">${c.user}</b> <span style="color:var(--text-white)">${c.comment}</span><br>
+                        <span style="font-size:11px; color:var(--text-muted)">${c.time}</span>
+                        ${imgHTML}
+                    </div>
+                </div>`;
+        });
+    }
+
+    function openLightbox(src) {
+        const lb = document.getElementById('lightbox');
+        document.getElementById('lightbox-image').src = src;
+        lb.classList.add('active');
+        lb.style.display = 'flex';
+    }
+
+    function closeLightbox() {
+        const lb = document.getElementById('lightbox');
+        lb.classList.remove('active');
+        setTimeout(() => lb.style.display = 'none', 300);
+    }
+
+    /* --- DETAIL VIEW --- */
+    function openDetail(id) {
+        selectedCafe = cafes.find(c => c.id === id);
+        
+        document.getElementById('detail-title').innerText = selectedCafe.title;
+        document.getElementById('detail-address').innerText = selectedCafe.address;
+        document.getElementById('detail-hotline').innerText = selectedCafe.hotline || "No hotline";
+        document.getElementById('detail-note').innerText = selectedCafe.note;
+        
+        const status = getOpenStatus(selectedCafe.openTime, selectedCafe.closeTime);
+if (status.text === "Open 24/7") {
+    document.getElementById('detail-status').innerHTML = `
+        <span class="${status.class}">${status.text}</span>
+    `;
+} else {
+    document.getElementById('detail-status').innerHTML = `
+        <span class="${status.class}">${status.text}</span>
+        <span class="close-hour">• ${status.closeText}</span>
+    `;
+}
+
+        
+        updateHeartIcon(); 
+        
+        document.getElementById('detail-wifi').innerText = selectedCafe.wifi; document.getElementById('detail-wifi').style.color = getMetricColor(selectedCafe.wifi);
+        document.getElementById('detail-drinks').innerText = selectedCafe.drinks; document.getElementById('detail-drinks').style.color = getMetricColor(selectedCafe.drinks);
+        document.getElementById('detail-service').innerText = selectedCafe.service; document.getElementById('detail-service').style.color = getMetricColor(selectedCafe.service);
+        document.getElementById('detail-price').innerText = selectedCafe.price; document.getElementById('detail-price').style.color = getPriceColor(selectedCafe.price);
+
+        // Render Chart for current selected day (default Wed or user select)
+        const currentDay = document.getElementById('chart-day-select').value;
+        renderChart(currentDay);
+        
+        renderCommunitySection();
+        
+        // PATCH: Wrapped in setTimeout to ensure DOM is ready
+        setTimeout(() => {
+            setupImageCarousel(selectedCafe.images.length ? selectedCafe.images : ["https://via.placeholder.com/400x300?text=No+Image"]);
+        }, 0);
+
+        navTo('screen-detail');
+    }
+
+    function toggleFavorite() {
+        if(!selectedCafe) return;
+        selectedCafe.isFavorite = !selectedCafe.isFavorite; 
+        updateHeartIcon(); 
+        if(document.getElementById('screen-saved').classList.contains('active')) renderSaved();
+    }
+
+    function updateHeartIcon() {
+        const icon = document.querySelector('#like-btn i');
+        if (selectedCafe.isFavorite) {
+            icon.className = "ph-fill ph-heart"; 
+            icon.style.color = "var(--color-red)";
+        } else {
+            icon.className = "ph ph-heart"; 
+            icon.style.color = "#ffffff";
+        }
+    }
+
+    /* --- DYNAMIC CHART RENDERER --- */
+    function renderChart(day) {
+        if(!selectedCafe) return;
+        const container = document.getElementById('crowd-chart');
+        container.innerHTML = '';
+        
+        const labels = ["8am", "11am", "2pm", "5pm", "8pm", "10pm"];
+        
+        // Fetch specific day data or fallback to Mon
+        const values = selectedCafe.crowdDataset[day] || selectedCafe.crowdDataset["Mon"];
+        
+        // Simulated 'Current Time' Highlighting (e.g., 2pm index 2)
+        const currentHourIndex = 2; 
+
+        values.forEach((val, i) => {
+            const isLive = i === currentHourIndex; 
+            const activeClass = isLive ? 'active' : '';
+            container.innerHTML += `<div class="bar-col ${activeClass}" onclick="toggleBar(this)"><div class="bar" style="height:${val}%;"></div><span class="bar-label">${labels[i]}</span></div>`;
+        });
+    }
+
+    function toggleBar(el) { document.querySelectorAll('.bar-col').forEach(c => c.classList.remove('active')); el.classList.add('active'); }
+    
+    function openGoogleMaps() {
+        if (!selectedCafe) return;
+
+        navigator.geolocation.getCurrentPosition(position => {
+            const userLat = position.coords.latitude;
+            const userLng = position.coords.longitude;
+
+            const cafeLat = selectedCafe.lat;
+            const cafeLng = selectedCafe.lng;
+
+            const url = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${cafeLat},${cafeLng}&travelmode=driving`;
+
+            window.open(url, "_blank");
+        }, (error) => {
+            // Fallback if location access is denied or fails
+            if (selectedCafe.map) {
+                window.open(selectedCafe.map, "_blank");
+            } else {
+                // Ultimate fallback if no map link exists
+                const query = encodeURIComponent(selectedCafe.title + " " + selectedCafe.address);
+                window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, "_blank");
+            }
+        });
+    }
+
+    /* --- CHECK-IN & UPLOAD --- */
+    function openCheckInModal() {
+        if(!currentUser) { document.getElementById('login-msg').innerText = "Sign in to Check-In."; openModal('modal-login'); }
+        else { 
+            const container = document.getElementById('crowd-input-bars'); container.innerHTML = '';
+            for(let i=1; i<=5; i++) container.innerHTML += `<div class="input-bar" id="ibar-${i}" onclick="setInputCrowd(${i})" style="height:${i*20}%"></div>`;
+            document.getElementById('checkin-feedback').value = "";
+            document.getElementById('checkin-file-input').value = ""; 
+            openModal('modal-checkin-form'); 
+        }
+    }
+    
+    function setInputCrowd(l) { for(let i=1; i<=5; i++) document.getElementById(`ibar-${i}`).classList.toggle('filled', i<=l); }
+    
+    function submitCheckInForm() {
+        const fileInput = document.getElementById('checkin-file-input');
+        const feedbackText = document.getElementById('checkin-feedback').value || "Updated status";
+        const hasFile = fileInput.files && fileInput.files[0];
+
+        const finishSubmit = (imageSrc = null) => {
+            const newContribution = {
+                user: currentUser.name,
+                comment: feedbackText,
+                photo: imageSrc,
+                time: "Just now"
+            };
+
+            if(selectedCafe) {
+                if(!selectedCafe.communityContributions) selectedCafe.communityContributions = [];
+                selectedCafe.communityContributions.unshift(newContribution);
+            }
+
+            closeModal('modal-checkin-form'); 
+            openModal('modal-xp'); 
+            currentUser.xp += 50; 
+            currentUser.checkins++;
+            
+            setTimeout(() => { 
+                closeModal('modal-xp'); 
+                if(selectedCafe && document.getElementById('screen-detail').classList.contains('active')) {
+                    renderCommunitySection(); 
+                }
+            }, 1500);
+        };
+
+        if(hasFile) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                finishSubmit(e.target.result);
+            };
+            reader.readAsDataURL(fileInput.files[0]);
+        } else {
+            finishSubmit(null);
+        }
+    }
+
+    /* --- COMPARE --- */
+    function openCompareSelection() {
+        if(!currentUser) { document.getElementById('login-msg').innerText = "Sign in to compare."; openModal('modal-login'); return; }
+        const list = document.getElementById('compare-list'); list.innerHTML = '';
+        cafes.filter(c => c.id !== selectedCafe.id && c.title !== "").forEach(c => { 
+            const img = c.images.length > 0 ? c.images[0] : '';
+            list.innerHTML += `<div class="compare-item" onclick="startCompare(${c.id})"><img src="${img}" style="width:40px; height:40px; border-radius:8px; object-fit:cover;"><b>${c.title}</b></div>`; 
+        });
+        openModal('screen-compare-select');
+    }
+    function startCompare(otherId) {
+        compareCafeId = otherId; const otherCafe = cafes.find(c => c.id === otherId);
+        closeModal('screen-compare-select'); navTo('screen-compare-result');
+        
+        document.getElementById('cmp-img-1').src = selectedCafe.images[0] || ''; 
+        document.getElementById('cmp-title-1').innerText = selectedCafe.title; 
+        renderCompData(1, selectedCafe);
+        
+        document.getElementById('cmp-img-2').src = otherCafe.images[0] || ''; 
+        document.getElementById('cmp-title-2').innerText = otherCafe.title; 
+        renderCompData(2, otherCafe);
+        
+        document.getElementById('btn-goto-a').innerText = "Go to " + selectedCafe.title; 
+        document.getElementById('btn-goto-b').innerText = "Go to " + otherCafe.title;
+    }
+    function renderCompData(idx, c) {
+        const set = (k, v, color) => { const el = document.getElementById(`cmp-${k}-${idx}`); el.innerText = v; el.style.color = color; };
+        set('wifi', c.wifi, getMetricColor(c.wifi)); set('drinks', c.drinks, getMetricColor(c.drinks)); set('service', c.service, getMetricColor(c.service)); set('price', c.price, getPriceColor(c.price)); 
+        set('crowd', c.finalCrowdScore+"%", getCrowdColor(c.finalCrowdScore));
+    }
+    function goToCafeB() { openDetail(compareCafeId); }
+
+    /* --- ACHIEVEMENTS RENDER LOGIC --- */
+    function renderAchievements() {
+        const container = document.getElementById('achievements-container');
+        if(!container) return;
+        
+        let html = '<h2 style="font-size: 16px; margin-bottom: 12px; color: var(--text-white); padding-left: 4px;">Achievements</h2>';
+        html += '<div class="achievements-scroll">';
+        
+        achievements.forEach(a => {
+            const isLocked = !a.unlocked;
+            const lockClass = isLocked ? 'locked' : '';
+            // If locked, show a lock icon overlay
+            const lockIcon = isLocked ? '<i class="ph-fill ph-lock-key" style="position:absolute; top:12px; right:12px; color:var(--text-white); z-index:2;"></i>' : '';
+            // If unlocked, icon is cyan. If locked, muted/white
+            const activeIconColor = isLocked ? 'var(--text-muted)' : 'var(--accent-cyan)';
+            
+            html += `
+            <div class="achievement-card ${lockClass}">
+                ${lockIcon}
+                <div class="achievement-icon-box" style="color: ${activeIconColor}">
+                    <i class="${a.icon}"></i>
+                </div>
+                <div style="font-size:13px; font-weight:700; color:var(--text-white); line-height:1.2;">${a.name}</div>
+                <div style="font-size:11px; color:var(--text-muted); line-height:1.3;">${a.description}</div>
+            </div>`;
+        });
+        
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    /* --- ACCOUNT --- */
+    function renderAccount() {
+        const el = document.getElementById('account-content');
+        if(!currentUser) { 
+            el.innerHTML = `
+                <div class="col center" style="margin-top:120px; text-align:center; gap: 16px;">
+                    <div class="profile-avatar" style="width:80px; height:80px; font-size:32px;"><i class="ph-fill ph-user"></i></div>
+                    <h2 style="color:var(--text-white)">Join StudySpot</h2>
+                    <p style="font-size:13px; max-width:200px;">Track your study sessions and unlock exclusive badges.</p>
+                    <button class="btn btn-primary" onclick="openLoginModal()" style="width:160px;">Sign In</button>
+                </div>`; 
+        } else { 
+            const level = Math.floor(currentUser.xp / 100) + 1; 
+            const progress = currentUser.xp % 100;
+            const nextLevelXP = 100;
+
+            let avatarHTML = '';
+            if(currentUser.avatar && currentUser.avatar.startsWith('http')) {
+                 avatarHTML = `<img src="${currentUser.avatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+            } else if(currentUser.avatar && currentUser.avatar.startsWith('data:image')) {
+                 avatarHTML = `<img src="${currentUser.avatar}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+            } else {
+                 avatarHTML = `<i class="ph-fill ph-user"></i>`;
+            }
+
+            el.innerHTML = `
+                <div style="width:100%; height:150px; background:transparent;"></div>
+                <div class="col center" style="width:100%; padding: 0 24px 20px;">
+                    <div class="profile-avatar">
+                        ${avatarHTML}
+                        <div class="avatar-edit-btn" onclick="document.getElementById('avatar-upload').click()">
+                            <i class="ph-bold ph-pencil-simple"></i>
+                        </div>
+                        <input type="file" id="avatar-upload" style="display:none" accept="image/*" onchange="handleAvatarChange(this)">
+                    </div>
+                    <h2 style="font-size: 24px; margin-bottom: 4px; color: var(--text-white);">${currentUser.name}</h2>
+                    <div class="level-badge">Level ${level} Explorer</div>
+                    <div style="width:100%; margin-top: 24px; margin-bottom: 30px;">
+                        <div class="row" style="justify-content:space-between; font-size:12px; margin-bottom:8px; color:var(--text-muted);">
+                            <span class="xp-text-label"><b>${currentUser.xp}</b> XP Earned</span>
+                            <span class="xp-text-label">Next: ${nextLevelXP} XP</span>
+                        </div>
+                        <div class="xp-bar-bg"><div class="xp-bar-fill" style="width: ${progress}%; background:var(--accent-cyan); height:100%; box-shadow: 0 0 10px var(--accent-cyan);"></div></div>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-card"><i class="ph-fill ph-map-pin" style="color:var(--accent-cyan); font-size:20px;"></i><b style="font-size:18px; color:var(--text-white);">${currentUser.checkins}</b><span style="font-size:11px; color:var(--text-muted);">Check-ins</span></div>
+                        <div class="stat-card"><i class="ph-fill ph-heart" style="color:var(--color-red); font-size:20px;"></i><b style="font-size:18px; color:var(--text-white);">${cafes.filter(c=>c.isFavorite).length}</b><span style="font-size:11px; color:var(--text-muted);">Saved</span></div>
+                        <div class="stat-card"><i class="ph-fill ph-camera" style="color:var(--color-orange); font-size:20px;"></i><b style="font-size:18px; color:var(--text-white);">${selectedCafe ? (selectedCafe.communityContributions ? selectedCafe.communityContributions.filter(c => c.photo).length : 0) : 0}</b><span style="font-size:11px; color:var(--text-muted);">Photos</span></div>
+                    </div>
+                    
+                    <!-- NEW ACHIEVEMENTS CONTAINER -->
+                    <div id="achievements-container" style="width:100%; padding-bottom: 20px;"></div>
+                </div>`;
+                
+            // Call render logic after HTML injection
+            renderAchievements();
+        }
+    }
+
+    /* --- AUTH & SOCIAL LOGIN --- */
+    function loginUser() { 
+        currentUser = { name: "Alex", xp: 120, checkins: 12, avatar: null }; 
+        closeModal('modal-login'); 
+        const unlockBlock = document.getElementById('home-unlock-block');
+        if(unlockBlock) unlockBlock.style.display = 'none';
+        if(document.getElementById('screen-account').classList.contains('active')) renderAccount(); 
+        if(document.getElementById('screen-home').classList.contains('active')) renderList(); 
+    }
+    function socialLogin(provider) { alert(`Feature ${provider} coming soon!`); loginUser(); }
+    function handleAvatarChange(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) { currentUser.avatar = e.target.result; renderAccount(); }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+    function logout() { currentUser = null; location.reload(); }
+    function openLoginModal() { document.getElementById('login-msg').innerText = "Sign in to access features."; openModal('modal-login'); }
+
+    // Init
+    document.addEventListener("DOMContentLoaded", () => {
+        renderList();
+        // Event Listener for Day Selection
+        document.getElementById('chart-day-select').addEventListener('change', function() {
+            renderChart(this.value);
+        });
+    });
+
+</script>
+</body>
+</html>
