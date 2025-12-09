@@ -498,7 +498,7 @@
             <div id="carousel-root" class="carousel-container"></div>
             <div id="carousel-dots" class="carousel-dots"></div>
             
-            <div style="position: absolute; bottom: 30px; left: 24px; right: 24px; z-index: 60;">
+            <div style="position: absolute; bottom: 30px; left: 24px; right: 24px; z-index: 60; pointer-events: none;">
                 <h1 id="detail-title">Title</h1>
                 <div class="status-row" id="detail-status">
                     <!-- Dynamic Status Here -->
@@ -1605,7 +1605,7 @@ function renderList(filter = 'All') {
         dotsContainer.innerHTML = images.map((_, i) => `<div class="dot ${i===0?'active':''}"></div>`).join('');
 
         const track = document.getElementById('track');
-        // Define imgBox as track to match requested variable name logic
+        // Alias imgBox to track for consistency with patch instructions
         const imgBox = track;
 
         function updateImage() {
@@ -1618,7 +1618,7 @@ function renderList(filter = 'All') {
             });
         }
 
-        // Virtual buttons logic to support the requested patch structure
+        // Virtual buttons logic to support swipe actions
         const nextBtn = { click: () => { if(index < images.length - 1) index++; updateImage(); } };
         const prevBtn = { click: () => { if(index > 0) index--; updateImage(); } };
 
@@ -1629,7 +1629,7 @@ function renderList(filter = 'All') {
             track.style.transition = 'none';
         }, { passive: true });
 
-        // 2. TouchMove (Preserved for UI sliding animation, added passive for performance)
+        // 2. TouchMove (Preserved for UI sliding animation, added passive: true)
         imgBox.addEventListener('touchmove', e => {
             if (!isDragging) return;
             const currentX = e.touches[0].clientX;
@@ -1637,7 +1637,7 @@ function renderList(filter = 'All') {
             track.style.transform = `translateX(${prevTranslate + diff}px)`;
         }, { passive: true });
 
-        // 3. TouchEnd (Patched with passive: true and requested threshold logic)
+        // 3. TouchEnd (Patched with passive: true and threshold logic)
         imgBox.addEventListener("touchend", e => {
             isDragging = false;
             let endX = e.changedTouches[0].clientX;
